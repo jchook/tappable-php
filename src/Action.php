@@ -1,7 +1,9 @@
 <?php
 
+namespace Tap;
+
 trait Action
 {
-  // Ahhh silence...
+  // :)
 }
 
