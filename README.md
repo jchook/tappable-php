@@ -1,4 +1,4 @@
-# Tap: a Plugin Framework for PHP 8.1+
+# Tappable: a Plugin Framework for PHP
 
 Tap helps you create modular PHP apps that accept plugins or "middleware"
 similar to redux, express, haraka, etc.
