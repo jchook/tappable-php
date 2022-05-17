@@ -5,7 +5,7 @@ namespace Tap;
 /**
  * Minimal implementation of a Tap
  */
-trait BasicTap
+trait TapTrait
 {
   private ?Tappable $source = null;
 
@@ -24,19 +24,19 @@ trait BasicTap
   /**
    * Override me
    */
-  public function __invoke(Action $action): void
+  public function __invoke(Action $action)
   {
-    $this->next($action);
+    return $this->next($action);
   }
 
-  protected function next(Action $action): void
+  protected function next(Action $action)
   {
-    ($this->next)($action);
+    return ($this->next)($action);
   }
 
-  protected function dispatch(Action $action): void
+  protected function dispatch(Action $action)
   {
-    $this->source->dispatch($action);
+    return $this->source->dispatch($action);
   }
 }
 

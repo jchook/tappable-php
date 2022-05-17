@@ -2,7 +2,7 @@
 
 namespace Tap;
 
-trait App
+trait TappableTrait
 {
   /**
    * @var Tap[]
@@ -42,3 +42,4 @@ trait App
     }
   }
 }
+
