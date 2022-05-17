@@ -5,10 +5,11 @@ similar to redux, express, haraka, etc.
 
 ## Concepts
 
-At its core, a `Tappable` app is a chain of plugin functions.
+A `Tap` is a plugin that can be added to a `Tappable` app.
 
-When a `Tappable` app dispatches an `Action`, it passes sequentially through
-each plugin, called a `Tap`.
+The common interface for each plugin is called an `Action`. When a `Tappable`
+app dispatches an `Action`, it passes sequentially through each registered
+plugin.
 
 Plugins can respond to any action of the application or other plugins, store
 internal state, expose methods, dispatch new or custom actions, or throw errors.
@@ -17,26 +18,25 @@ Each plugin wraps the next plugin in the chain, allowing plugins to modify
 actions before forwarding them down the chain, and to wrap other plugins with
 try/catch, etc.
 
+This design enables plugin authors to write modular functionality with
+versatile, statically-typed interoperability and powerful control flow.
+
+
 ## Example Usage
 
 ```php
 <?php
 
-use Tap\{App, BasicTap, Tap, Tappable};
+class MyApp extends App {}
 
-class MyApp implements Tappable
-{
-  use App;
-}
+class MyAction extends BasicAction {}
 
-class MyTap implements Tap
-{
-  use BasicTap;
-  public function handleAction(Action $action)
-  {
-    $this->next($action);
-  }
-}
+class MyTap extends BasicTap {}
+
+$app = new MyApp();
+$app->tap(new MyTap());
+$app->dispatch(new MyAction());
 
 ?>
 ```
+

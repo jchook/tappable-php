@@ -9,6 +9,11 @@ use Tap\BasicTap;
 use Tap\Tap;
 use Tap\Tappable;
 
+class MyBasicPassthroughTap implements Tap
+{
+  use BasicTap;
+}
+
 class MyBasicTap implements Tap
 {
   use BasicTap;
@@ -53,21 +58,22 @@ class MyBasicAction implements Action
 
 class BasicTapTest extends TestCase
 {
-  public function testBasicTapNext()
+  public function testBasicTapCallsNext()
   {
     $act = new MyBasicAction('act1');
     $t1 = new MyBasicTap('t1');
-    $t2 = new MyBasicTap('t2');
+    $t2 = new MyBasicPassthroughTap();
+    $t3 = new MyBasicTap('t3');
     $src = new MyBasicTappable();
-    $src->tap($t1, $t2);
+    $src->tap($t1, $t2, $t3);
     $src->dispatch($act);
     $this->assertNotEmpty($t1->invokedAt);
     $this->assertSame($act, $t1->invokedWith);
-    $this->assertSame($act, $t2->invokedWith);
-    $this->assertGreaterThan($t1->invokedAt, $t2->invokedAt);
+    $this->assertSame($act, $t3->invokedWith);
+    $this->assertGreaterThan($t1->invokedAt, $t3->invokedAt);
   }
 
-  public function testBasicTapDispatch()
+  public function testBasicTapCallsDispatch()
   {
     $disp = new MyBasicAction('disp');
     $act = new MyBasicAction('act', $disp);
