@@ -5,49 +5,51 @@ namespace Tap;
 trait App
 {
   /**
-   * @var Middleware[]
+   * @var Tap[]
    */
-  private array $middlewares = [];
+  private array $taps = [];
 
   /**
-   * @param Middleware[] $middleware
+   * @param Tap[] $tap
    */
-  public function use(...$middlewares)
+  public function tap(...$taps): void
   {
-    $this->middlewares = array_merge($this->middlewares, $middlewares);
-    $this->bindMiddleware();
+    $this->taps = array_merge($this->taps, $taps);
+    $this->bindTaps();
   }
 
   /**
    * Dispatch an action
    */
-  public function dispatch(ActionInterface $action): void
+  public function dispatch(Action $action): void
   {
-    if (isset($this->middlewares[0])) {
-      ($this->middlewares[0])($action);
+    if (isset($this->taps[0])) {
+      ($this->taps[0])($action);
     }
   }
 
   /**
-   * Binds the middleware for $this->next() and $this->dispatch()
+   * Binds the tap for $this->next() and $this->dispatch()
    */
-  private function bindMiddleware(): void
+  private function bindTaps(): void
   {
-    $middlewares = $this->middlewares;
+    $taps = $this->taps;
     $idx = 0;
     // IDEA:
-    // if this next function knew which actions each middleware supported, it
-    // could avoid calling irrelevant middleware, and cache per-action lists of
-    // middleware.
-    $next = function(ActionInterface $action) use ($middlewares, &$idx) {
+    // if this next function knew which actions each tap supported, it
+    // could avoid calling irrelevant tap, and cache per-action lists of
+    // tap.
+    $next = function(Action $action) use ($taps, &$idx) {
       $idx++;
-      $middlewares[$idx]($action);
+      if (isset($taps[$idx])) {
+        return $taps[$idx]($action);
+      }
     };
-    foreach ($middlewares as $middleware) {
+    foreach ($taps as $tap) {
       // Previously I really really wanted to support PHP anonymous functions
       // and the classic Redux function signature. I think it's time to let that
       // idea go. PHP is not JS.
-      $middleware->bindAppAndNext($this, $next);
+      $tap->bindTap($this, $next);
     }
   }
 }

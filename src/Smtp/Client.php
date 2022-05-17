@@ -3,9 +3,10 @@
 namespace Tap\Smtp;
 
 use Tap\App;
-use Tap\AppInterface;
+use Tap\Smtp\Middleware\Smtp;
+use Tap\Tappable;
 
-class Client implements AppInterface
+class Client implements Tappable
 {
   use App;
 
@@ -13,6 +14,9 @@ class Client implements AppInterface
     public Smtp $smtp = new Smtp(),
   )
   {
+    $this->tap(
+      $this->smtp
+    );
   }
 }
 

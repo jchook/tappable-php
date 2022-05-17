@@ -2,15 +2,18 @@
 
 namespace Tap;
 
-trait ActionHandlerMiddleware
+/**
+ * Uses PHP Reflection to automatically map actions to handler methods.
+ */
+trait ReflectiveTap
 {
-  use BasicMiddleware;
+  use BasicTap;
 
   protected ?array $actionHandlers = null;
 
   private array $classInheritanceCache = [];
 
-  public function __invoke(ActionInterface $action): void
+  public function __invoke(Action $action): void
   {
     if (is_null($this->actionHandlers)) {
       $this->generateActionHandlers();
@@ -23,7 +26,7 @@ trait ActionHandlerMiddleware
     }
   }
 
-  private function getActionHandler(ActionInterface $action): callable|null
+  private function getActionHandler(Action $action): callable|null
   {
     // No action handlers?
     if (!$this->actionHandlers) {

@@ -2,8 +2,7 @@
 
 namespace Tap;
 
-trait Action
+interface Action
 {
   // :)
 }
-
