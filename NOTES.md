@@ -129,3 +129,37 @@ Could combine these two ideas...
 Maybe actions don't even need a type string... their class name can be their
 unique identifier. Also allows for extending actions....
 
+
+---
+
+I think I have finally come around to the Redux + typed actions idea.
+
+1. PHP is not JavaScript
+2. Redux has lots of complications when using TypeScript
+3. All the other ideas in this document are starting with syntactic sugar and
+   working backwards from there. That is bound to lead to a disasterously
+   complex heap of shit.
+
+Previously I really really wanted to support PHP anonymous functions
+and the classic Redux function signature. I think it's time to let that
+idea go. PHP is not JS.
+
+It's okay to have a trait for Middleware and force all middleware to be classes.
+Normal functions in PHP are not really ergonomic like they are in JS, and they
+are "second class" citizens in PHP.. sometimes represented by a string or array
+for example.
+
+Traits have some drawbacks... the conflict resolution capability can actually
+change the signature of a function you expect to exist via an instanceof check.
+Interfaces are much stronger and should be preferred to traits or used in
+conjunction with traits.
+
+The trait at best allows you to satisfy an interface. It does not ensure an
+interface.
+
+The class name essentially functions as the action "type".
+
+Classes can provide a "type" string if needed, e.g. when porting to TypeScript
+or exporting actions to a file. That string will be identical to the class name
+including namespace.
+

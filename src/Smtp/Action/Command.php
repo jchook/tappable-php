@@ -2,13 +2,11 @@
 
 namespace Tap\Smtp\Action;
 
-use Tap\Action;
+use Tap\ActionInterface;
 use Tap\Smtp\Element;
 
-class Command
+class Command implements ActionInterface
 {
-  use Action;
-
   public function __construct(
     public Element\Command $command
   )
