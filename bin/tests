@@ -1,0 +1,12 @@
+#!/bin/sh
+
+if type php8.1 2>&1 >/dev/null; then
+  PHP=php8.1
+else
+  PHP=php
+fi
+
+$PHP vendor/bin/phpunit tests "$@" \
+  | sed -E 's/#StandWithUkraine//' \
+  | awk -f tests/phpunit.colorize.awk
+

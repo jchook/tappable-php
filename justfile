@@ -3,7 +3,11 @@ set positional-arguments
 default:
   just --list
 
+coverage *args="":
+  bin/coverage "$@"
+
 tests *args="":
-  vendor/bin/phpunit tests "$@" \
-    | sed -E 's/#StandWithUkraine//' \
-    | awk -f tests/phpunit.colorize.awk
+  bin/tests "$@"
+
+watch *args="":
+  bin/watch "$@"

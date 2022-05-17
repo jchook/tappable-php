@@ -39,7 +39,10 @@ trait App
     // if this next function knew which actions each tap supported, it
     // could avoid calling irrelevant tap, and cache per-action lists of
     // tap.
+    //
+    // Crap. This wont work for nested dispatch
     $next = function(Action $action) use ($taps, &$idx) {
+      echo "\nNEXT: $idx\n";
       $idx++;
       if (isset($taps[$idx])) {
         return $taps[$idx]($action);

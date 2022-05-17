@@ -1,0 +1,15 @@
+#!/bin/sh
+if [ $# -eq 0 ]; then
+  set -- 'bin/tests'
+fi
+echo "Will run the following command whenenver PHP files change:"
+echo "$*"
+inotifywait -q \
+  -e ATTRIB -r -m "src" "tests" --format '%w%f' | \
+  while read -r filename; do
+    echo "changed: $filename"
+    if echo "$filename" | grep -q -E '\.php$'; then
+      "$@"
+    fi
+  done
+
