@@ -1,0 +1,19 @@
+{
+    "name": "jchook/tap",
+    "description": "Plugins",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Jchook\\Tap\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Wes Roberts",
+            "email": "takq@a.zinc.email"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {}
+}
