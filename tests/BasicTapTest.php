@@ -14,16 +14,19 @@ class MyBasicTap implements Tap
   use BasicTap;
   public ?float $invokedAt = null;
   public ?Action $invokedWith = null;
+  public function __construct(public string $name) {}
   public function __invoke(Action $action)
   {
     $this->invokedAt = microtime(true);
     $this->invokedWith = $action;
     if ($action instanceof MyBasicAction) {
+      // echo "\nINVO {$this->name}({$action->name})\n";
       if ($action->dispatchMe) {
-        echo "\nDISPATCHING\n";
-        $action->dispatchedAt = microtime(true);
-        $action->dispatchedCount++;
-        $this->dispatch($action->dispatchMe);
+        $disp = $action->dispatchMe;
+        // echo "\nDISP {$this->name}({$action->name}) -> {$disp->name}\n";
+        $disp->dispatchedAt = microtime(true);
+        $disp->dispatchedCount++;
+        $this->dispatch($disp);
       }
     }
     usleep(10);
@@ -40,7 +43,10 @@ class MyBasicAction implements Action
 {
   public ?float $dispatchedAt = null;
   public int $dispatchedCount = 0;
-  public function __construct(public ?Action $dispatchMe = null)
+  public function __construct(
+    public string $name,
+    public ?Action $dispatchMe = null
+  )
   {
   }
 }
@@ -49,9 +55,9 @@ class BasicTapTest extends TestCase
 {
   public function testBasicTapNext()
   {
-    $act = new MyBasicAction();
-    $t1 = new MyBasicTap();
-    $t2 = new MyBasicTap();
+    $act = new MyBasicAction('act1');
+    $t1 = new MyBasicTap('t1');
+    $t2 = new MyBasicTap('t2');
     $src = new MyBasicTappable();
     $src->tap($t1, $t2);
     $src->dispatch($act);
@@ -63,10 +69,10 @@ class BasicTapTest extends TestCase
 
   public function testBasicTapDispatch()
   {
-    $disp = new MyBasicAction();
-    $act = new MyBasicAction($disp);
-    $t1 = new MyBasicTap();
-    $t2 = new MyBasicTap();
+    $disp = new MyBasicAction('disp');
+    $act = new MyBasicAction('act', $disp);
+    $t1 = new MyBasicTap('t1');
+    $t2 = new MyBasicTap('t2');
     $src = new MyBasicTappable();
     $src->tap($t1, $t2);
     $src->dispatch($act);

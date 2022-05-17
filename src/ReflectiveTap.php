@@ -83,9 +83,10 @@ trait ReflectiveTap
       if (!method_exists($type, 'getName')) {
         continue;
       }
-      $name = $type->getName();
-      if (!isset($this->actionHandlers[$name])) {
-        $this->actionHandlers[$name] = [$this, $method->getName()];
+      $typeName = $type->getName();
+      // TODO: Check to see if the type implements Action
+      if (!isset($this->actionHandlers[$typeName])) {
+        $this->actionHandlers[$typeName] = [$this, $method->getName()];
       }
     }
   }

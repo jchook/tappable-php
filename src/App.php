@@ -34,25 +34,11 @@ trait App
   private function bindTaps(): void
   {
     $taps = $this->taps;
-    $idx = 0;
-    // IDEA:
-    // if this next function knew which actions each tap supported, it
-    // could avoid calling irrelevant tap, and cache per-action lists of
-    // tap.
-    //
-    // Crap. This wont work for nested dispatch
-    $next = function(Action $action) use ($taps, &$idx) {
-      echo "\nNEXT: $idx\n";
-      $idx++;
-      if (isset($taps[$idx])) {
-        return $taps[$idx]($action);
-      }
-    };
-    foreach ($taps as $tap) {
-      // Previously I really really wanted to support PHP anonymous functions
-      // and the classic Redux function signature. I think it's time to let that
-      // idea go. PHP is not JS.
-      $tap->bindTap($this, $next);
+    $count = count($taps);
+    $emptyNext = function() {};
+    for ($idx = 0; $idx < $count; $idx++) {
+      $next = $taps[$idx + 1] ?? $emptyNext;
+      $taps[$idx]->bindTap($this, $next);
     }
   }
 }
