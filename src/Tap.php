@@ -5,6 +5,6 @@ namespace Tap;
 interface Tap
 {
   public function __invoke(Action $action);
-  public function bindTap(Tappable $source, callable $next): void;
+  public function bindTap(callable $dispatch, callable $next): void;
 }
 

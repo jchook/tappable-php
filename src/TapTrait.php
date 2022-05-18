@@ -7,7 +7,11 @@ namespace Tap;
  */
 trait TapTrait
 {
-  private ?Tappable $source = null;
+  /**
+   * https://github.com/phpDocumentor/phpDocumentor/issues/1712#issuecomment-727865336=
+   * @var callable(Action): void
+   */
+  private $dispatch = null;
 
   /**
    * https://github.com/phpDocumentor/phpDocumentor/issues/1712#issuecomment-727865336=
@@ -15,9 +19,9 @@ trait TapTrait
    */
   private $next = null;
 
-  public function bindTap(Tappable $source, callable $next): void
+  public function bindTap(callable $dispatch, callable $next): void
   {
-    $this->source = $source;
+    $this->dispatch = $dispatch;
     $this->next = $next;
   }
 
@@ -36,7 +40,7 @@ trait TapTrait
 
   protected function dispatch(Action $action)
   {
-    return $this->source->dispatch($action);
+    return ($this->dispatch)($action);
   }
 }
 

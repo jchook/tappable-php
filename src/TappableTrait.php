@@ -38,7 +38,7 @@ trait TappableTrait
     $emptyNext = function() {};
     for ($idx = 0; $idx < $count; $idx++) {
       $next = $taps[$idx + 1] ?? $emptyNext;
-      $taps[$idx]->bindTap($this, $next);
+      $taps[$idx]->bindTap([$this, 'dispatch'], $next);
     }
   }
 }

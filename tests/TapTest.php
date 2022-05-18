@@ -153,9 +153,14 @@ class TapTest extends TestCase
     $this->assertEquals(1, $t1->dispatchHandled);
   }
 
-  // public function testMyGenericReflectiveTap()
-  // {
-  //   $t1 = new MyGenericReflectiveTap();
-  //   $t1(new MyOtherAction());
-  // }
+  public function testMyGenericReflectiveTap()
+  {
+    $nextCalled = 0;
+    $dispatch = function() {};
+    $next = function() use (&$nextCalled) { $nextCalled += 1; };
+    $t1 = new MyGenericReflectiveTap();
+    $t1->bindTap($dispatch, $next);
+    $t1(new MyOtherAction());
+    $this->assertSame(1, $nextCalled);
+  }
 }
