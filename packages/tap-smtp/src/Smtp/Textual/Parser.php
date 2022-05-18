@@ -23,13 +23,8 @@ use Tap\Smtp\Element\Param;
 use Tap\Smtp\Element\Path;
 use Tap\Smtp\Element\ReversePath;
 
-class Renderer
+class Parser
 {
-	public function __construct(
-		public bool $global = false,
-	)
-	{
-	}
 
 	/**
 	 * ehlo = "EHLO" SP ( Domain / address-literal ) CRLF
@@ -48,64 +43,58 @@ class Renderer
 	 * noop = "NOOP" [ SP String ] CRLF
 	 * quit = "QUIT" CRLF
 	 */
-	public function renderCommand(Command $cmd): string
+	public function parseCommand(string $line): Command
 	{
-		$verb = $cmd->verb;
-
-		// Final
-		$str = [$verb];
-
-		if ($cmd instanceof Helo || $cmd instanceof Ehlo) {
-			$str[] = $this->renderOrigin($cmd->origin);
+		$words = explode(' ', trim($line));
+		$verb = strtoupper($words[0]);
+		switch ($verb) {
+		case 'HELO':
+			$origin = new OriginDomain($words[1]);
+			return new Helo($origin);
+		case 'EHLO':
+			$origin = $this->parseOrigin($words[1]);
+			return new Ehlo($origin);
+		case 'MAIL':
+			[,$pathStr] = $this->expectRegex('/^FROM:(<[^>]*>)$/i', $words[1]);
+			$path = $this->parseReversePath($pathStr);
+		case 'RCPT':
+		case 'DATA':
+		case 'RSET':
+		case 'VRFY':
+		case 'EXPN':
+		case 'HELP':
+		case 'NOOP':
+		case 'QUIT':
 		}
-
-		elseif ($cmd instanceof MailFrom) {
-			$str[] = 'FROM:' . $this->renderPath($cmd->reversePath);
-			if ($cmd->params) {
-				$str[] = $this->renderParams($cmd->params);
-			}
-		}
-
-		elseif ($cmd instanceof RcptTo) {
-			$str[] = 'FROM:' . $this->renderPath($cmd->forwardPath);
-			if ($cmd->params) {
-				$str[] = $this->renderParams($cmd->params);
-			}
-		}
-
-		elseif (
-			$cmd instanceof Expn ||
-			$cmd instanceof Help ||
-			$cmd instanceof Noop ||
-			$cmd instanceof Vrfy
-		) {
-			if (!is_null($cmd->string)) {
-				$str[] = $cmd->string;
-			}
-		}
-
-		elseif (
-			$cmd instanceof Data ||
-			$cmd instanceof Quit ||
-			$cmd instanceof Rset
-		) {
-			// Verb only
-		}
-
-		return implode(' ', $str) . "\r\n";
 	}
 
-	public function renderOrigin(Origin $origin): string
+	protected function expectRegex(
+		string $pattern,
+		string $subject,
+		?string $errorMsg = null
+	): array
 	{
-		if ($origin instanceof OriginDomain) {
-			return $origin->domain;
+		$matches = [];
+		$result = preg_match($pattern, $subject, $matches);
+		if ($result === false) {
+			throw new InvalidArgumentException(
+				'Syntax error: ' . ($errorMsg ?? 'unexpected characters encountered')
+			);
 		}
-		if ($origin instanceof OriginAddressLiteral) {
-			return '[' . $origin->address . ']';
+		return $matches;
+	}
+
+	private function parseOrigin(string $origin): Origin
+	{
+		if (substr($origin, 0, 1) === '[') {
+			return new OriginAddressLiteral(trim($origin, '[]'));
 		}
-		throw new InvalidArgumentException(
-			'Unrecognized Origin type: ' . get_class($origin)
-		);
+		return new OriginDomain($origin);
+	}
+
+	private function parseReversePath(string $path): ReversePath
+	{
+
 	}
 
 	/**
@@ -240,3 +229,4 @@ class Renderer
 		return $final;
 	}
 }
+

@@ -6,7 +6,7 @@ class Mailbox
 {
 	public function __construct(
 		public string $localPart,
-		public string $domain
+		public Origin $origin,
 	)
 	{
 	}
