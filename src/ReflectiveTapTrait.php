@@ -62,6 +62,7 @@ trait ReflectiveTapTrait
     }
 
     // No handler
+    $this->classInheritanceCache[$class] = false;
     return null;
   }
 

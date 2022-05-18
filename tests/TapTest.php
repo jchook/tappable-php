@@ -39,12 +39,12 @@ class MyDispatchTap extends TapBase
 
 class MyReflectiveTap extends ReflectiveTap
 {
-  public int $dispatchHandled = 0;
-  public int $otherHandled = 0;
+  public int $dispatchActionHandled = 0;
+  public int $relatedActionHandeled = 0;
   protected array $skipActionHandlers = [
     'dontHandleSkipped',
   ];
-  public function dontHandleSkipped(MyOtherAction $action)
+  public function dontHandleSkipped(MyRelatedAction $action)
   {
     $action;
   }
@@ -56,20 +56,20 @@ class MyReflectiveTap extends ReflectiveTap
   {
     $nonAction;
   }
-  public function handleMyOtherAction(MyOtherAction $action)
+  public function handleMyRelatedAction(MyRelatedAction $action)
   {
-    $this->otherHandled++;
+    $this->relatedActionHandeled++;
     return $this->next($action);
   }
 
   public function handleMyDispatchAction(MyDispatchAction $action)
   {
-    $this->dispatchHandled++;
+    $this->dispatchActionHandled++;
     return $this->next($action);
   }
   public function handleMyDispatchAction2(MyDispatchAction $action)
   {
-    $this->dispatchHandled += 42;
+    $this->dispatchActionHandled += 42;
     return $this->next($action);
   }
 
@@ -83,7 +83,11 @@ class MyTappable extends TappableBase
 {
 }
 
-class MyOtherAction extends ActionBase
+class MyRelatedAction extends ActionBase
+{
+}
+
+class MyUnrelatedAction extends ActionBase
 {
 }
 
@@ -136,21 +140,27 @@ class TapTest extends TestCase
 
   public function testMyReflectiveTapCallsTheCorrectHandler()
   {
-    $extended = new MyExtendedAction('extended');
+    $extendedAction = new MyExtendedAction('extendedAction');
     $t1 = new MyReflectiveTap();
     $src = new MyTappable();
     $src->tap($t1);
-    $src->dispatch($extended);
+    $src->dispatch($extendedAction);
     $this->assertEquals(
       1,
-      $t1->dispatchHandled,
-      'ReflectiveTap handles extended action types'
+      $t1->dispatchActionHandled,
+      'ReflectiveTap handles MyExtendedAction action types'
     );
-    $this->assertEquals(0, $t1->otherHandled);
-    $other = new MyOtherAction();
-    $src->dispatch($other);
-    $this->assertEquals(1, $t1->otherHandled);
-    $this->assertEquals(1, $t1->dispatchHandled);
+    $this->assertEquals(0, $t1->relatedActionHandeled);
+    $relatedAction = new MyRelatedAction();
+    $src->dispatch($relatedAction);
+    $this->assertEquals(1, $t1->relatedActionHandeled);
+    $this->assertEquals(1, $t1->dispatchActionHandled);
+
+    // Testing the inheritance cache
+    // it's really unnnecessary but works!
+    $unrelatedAction = new MyUnrelatedAction();
+    $src->dispatch($unrelatedAction);
+    $src->dispatch($unrelatedAction);
   }
 
   public function testMyGenericReflectiveTap()
@@ -160,7 +170,7 @@ class TapTest extends TestCase
     $next = function() use (&$nextCalled) { $nextCalled += 1; };
     $t1 = new MyGenericReflectiveTap();
     $t1->bindTap($dispatch, $next);
-    $t1(new MyOtherAction());
+    $t1(new MyRelatedAction());
     $this->assertSame(1, $nextCalled);
   }
 }
