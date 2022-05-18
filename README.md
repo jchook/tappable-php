@@ -1,7 +1,7 @@
 # Tappable: a Plugin Framework for PHP
 
 ![Test Coverage 100%](https://img.shields.io/badge/test%20coverage-100%25-brightgreen)
-![License MIT](https://img.shields.io/github/license/jchook/tappable-php)
+![License MIT](https://img.shields.io/github/license/jchook/tappable-php?color=brightgreen)
 ![PHP](https://img.shields.io/badge/php-8.1%2B-787cb5)
 
 Tappable helps you create modular PHP apps that accept plugins or "middleware"
