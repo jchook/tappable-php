@@ -75,6 +75,10 @@ class MyReflectiveTap extends ReflectiveTap
 
 }
 
+class MyGenericReflectiveTap extends ReflectiveTap
+{
+}
+
 class MyTappable extends TappableBase
 {
 }
@@ -148,4 +152,10 @@ class TapTest extends TestCase
     $this->assertEquals(1, $t1->otherHandled);
     $this->assertEquals(1, $t1->dispatchHandled);
   }
+
+  // public function testMyGenericReflectiveTap()
+  // {
+  //   $t1 = new MyGenericReflectiveTap();
+  //   $t1(new MyOtherAction());
+  // }
 }

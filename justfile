@@ -6,6 +6,9 @@ default:
 coverage *args="":
   bin/coverage "$@"
 
+readme:
+  grip
+
 tests *args="":
   bin/tests "$@"
 

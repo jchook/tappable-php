@@ -1,4 +1,4 @@
 #!/bin/sh
 # To run coverage you must have xdebug installed
-XDEBUG_MODE=coverage bin/tests --coverage-text --whitelist src "$@"
+XDEBUG_MODE=coverage bin/tests --coverage-text --coverage-html coverage --whitelist src "$@"
 
