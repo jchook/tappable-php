@@ -2,11 +2,10 @@
 
 namespace Tap\Smtp\Element;
 
-class Param
+class ForwardPath implements Path
 {
 	public function __construct(
-		public string $name,
-		public ?string $value = null,
+		public Mailbox $mailbox
 	)
 	{
 	}

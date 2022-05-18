@@ -2,6 +2,9 @@
 
 namespace Tap\Smtp\Element;
 
-interface Path
+interface Origin
 {
 }
+
+
+

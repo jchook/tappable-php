@@ -2,9 +2,27 @@
 
 namespace Tap\Smtp\Textual;
 
-use Tap\Smtp\Element\Command;
+use InvalidArgumentException;
+use Tap\Smtp\Element\Command\Command;
+use Tap\Smtp\Element\Command\Data;
+use Tap\Smtp\Element\Command\Ehlo;
+use Tap\Smtp\Element\Command\Expn;
+use Tap\Smtp\Element\Command\Helo;
+use Tap\Smtp\Element\Command\Help;
+use Tap\Smtp\Element\Command\MailFrom;
+use Tap\Smtp\Element\Command\Noop;
+use Tap\Smtp\Element\Command\Quit;
+use Tap\Smtp\Element\Command\RcptTo;
+use Tap\Smtp\Element\Command\Rset;
+use Tap\Smtp\Element\Command\Vrfy;
+use Tap\Smtp\Element\ForwardPath;
 use Tap\Smtp\Element\Mailbox;
+use Tap\Smtp\Element\Origin;
+use Tap\Smtp\Element\OriginDomain;
+use Tap\Smtp\Element\OriginAddressLiteral;
 use Tap\Smtp\Element\Param;
+use Tap\Smtp\Element\Path;
+use Tap\Smtp\Element\ReversePath;
 
 class Renderer
 {
@@ -29,48 +47,113 @@ class Renderer
 	 */
 	public function renderCommand(Command $cmd): string
 	{
-		$verb = $cmd->getVerb();
-		$words = $cmd->getWords();
+		$verb = $cmd->verb;
 
 		// Final
 		$str = [$verb];
 
-		// Special verbs
-		switch (strtoupper($verb)) {
-			case 'MAIL':
-			case 'RCPT':
-				$prefix = $verb === 'MAIL' ? 'FROM:' : 'TO:';
-				$str[] = $prefix . $this->renderPath(array_shift($words));
-				break;
+		if ($cmd instanceof Helo || $cmd instanceof Ehlo) {
+			$str[] = $this->renderOrigin($cmd->origin);
 		}
 
-		// Remainder of words
-		foreach ($words as $word) {
-			if ($word instanceof Param) {
-				$str[] = $this->stringifyParam($word);
-			} elseif (is_string($word)) {
-				$str[] = $word;
-			} else {
-				throw new \InvalidArgumentException(
-					'Expected Param or string word, but received ' . gettype($word)
-				);
+		elseif ($cmd instanceof MailFrom) {
+			$str[] = 'FROM:' . $this->renderPath($cmd->reversePath);
+			if ($cmd->params) {
+				$str[] = $this->renderParams($cmd->params);
 			}
+		}
+
+		elseif ($cmd instanceof RcptTo) {
+			$str[] = 'FROM:' . $this->renderPath($cmd->forwardPath);
+			if ($cmd->params) {
+				$str[] = $this->renderParams($cmd->params);
+			}
+		}
+
+		elseif (
+			$cmd instanceof Expn ||
+			$cmd instanceof Help ||
+			$cmd instanceof Noop ||
+			$cmd instanceof Vrfy
+		) {
+			if (!is_null($cmd->string)) {
+				$str[] = $cmd->string;
+			}
+		}
+
+		elseif (
+			$cmd instanceof Data ||
+			$cmd instanceof Quit ||
+			$cmd instanceof Rset
+		) {
+			// Verb only
 		}
 
 		return implode(' ', $str) . "\r\n";
 	}
 
+	public function renderOrigin(Origin $origin): string
+	{
+		if ($origin instanceof OriginDomain) {
+			return $origin->domain;
+		}
+		if ($origin instanceof OriginAddressLiteral) {
+			return '[' . $origin->address . ']';
+		}
+		throw new InvalidArgumentException(
+			'Unrecognized Origin type: ' . get_class($origin)
+		);
+	}
+
+	/**
+	 * RFC 5321 § 4.1.2
+	 *
+   * Mail-parameters  = esmtp-param *(SP esmtp-param)
+   * Rcpt-parameters  = esmtp-param *(SP esmtp-param)
+   * esmtp-param    = esmtp-keyword ["=" esmtp-value]
+   * esmtp-keyword  = (ALPHA / DIGIT) *(ALPHA / DIGIT / "-")
+   * esmtp-value    = 1*(%d33-60 / %d62-126)
+   *                ; any CHAR excluding "=", SP, and control
+   *                ; characters.  If this string is an email address,
+   *                ; i.e., a Mailbox, then the "xtext" syntax [32]
+   *                ; SHOULD be used.
+	 */
+	private function renderParam(Param $param): string
+	{
+		$name = $param->name;
+		$value = $param->value;
+		if (is_null($value)) {
+			return $name;
+		}
+		return $name . '=' . $this->stringifyValue($value);
+	}
+
+	/**
+	 * @param Param[] $params
+	 */
+	public function renderParams(array $params): string
+	{
+		return implode(' ', array_map([$this, 'renderParam'], $params));
+	}
+
+
 	/**
 	 * Path = "<" [A-d-l ":"] Mailbox ">"
 	 */
-	public function renderPath(?Mailbox $path = null): string
+	public function renderPath(Path $path): string
 	{
-		if (!$path) {
-			return '<>';
+		if ($path instanceof ReversePath || $path instanceof ForwardPath) {
+			if (!$path->mailbox) {
+				return '<>';
+			}
+			return '<' . $this->stringifyLocalPart($path->mailbox->localPart) . '@' .
+				$this->stringifyDomain($path->mailbox->domain);
 		}
-		return '<' . $this->stringifyLocalPart($path->getLocalPart())
-			. '@' . $this->stringifyDomain($path->getDomain()) . '>';
+		throw new InvalidArgumentException(
+			'Unrecognized Path type: ' . get_class($path)
+		);
 	}
+
 
 	/**
 	 * domain = dot-atom / domain-literal
@@ -120,29 +203,6 @@ class Renderer
 		$str = str_replace('\\', '\\\\', $str);
 		$str = str_replace('"', '\\"', $str);
 		return '"' . $str . '"';
-	}
-
-	/**
-	 * RFC 5321 § 4.1.2
-	 *
-   * Mail-parameters  = esmtp-param *(SP esmtp-param)
-   * Rcpt-parameters  = esmtp-param *(SP esmtp-param)
-   * esmtp-param    = esmtp-keyword ["=" esmtp-value]
-   * esmtp-keyword  = (ALPHA / DIGIT) *(ALPHA / DIGIT / "-")
-   * esmtp-value    = 1*(%d33-60 / %d62-126)
-   *                ; any CHAR excluding "=", SP, and control
-   *                ; characters.  If this string is an email address,
-   *                ; i.e., a Mailbox, then the "xtext" syntax [32]
-   *                ; SHOULD be used.
-	 */
-	private function stringifyParam(Param $param): string
-	{
-		$name = $param->getName();
-		$value = $param->getValue();
-		if (!is_null($value)) {
-			$name .= '=' . $this->stringifyValue($value);
-		}
-		return $name;
 	}
 
 	/**
