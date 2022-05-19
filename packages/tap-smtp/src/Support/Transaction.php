@@ -4,11 +4,15 @@ namespace Tap\Smtp\Support;
 
 use Tap\Smtp\Element\Command\Command;
 use Tap\Smtp\Element\Command\Data;
+use Tap\Smtp\Element\Command\Ehlo;
 use Tap\Smtp\Element\Command\EndOfData;
+use Tap\Smtp\Element\Command\Helo;
 use Tap\Smtp\Element\Command\MailFrom;
+use Tap\Smtp\Element\Command\Quit;
 use Tap\Smtp\Element\Command\RcptTo;
+use Tap\Smtp\Element\Command\Rset;
 use Tap\Smtp\Element\Reply\Greeting;
-use Tap\Smtp\Exception\IOException;
+use Tap\Smtp\Element\Reply\Reply;
 
 /**
  * RFC 5321 § 4.2
@@ -32,75 +36,86 @@ use Tap\Smtp\Exception\IOException;
  */
 class Transaction
 {
+	/**
+	 * @var Command[]
+	 */
+	protected $commandQueue = [];
+
+	/**
+	 * @var CommandReplyPair[]
+	 */
+	protected array $transcript = [];
+
 	public function __construct(
 		public string $id,
 	)
 	{
+		$this->state = new TransactionState();
 	}
 
 	public function receiveCommand(Command $command)
 	{
-    if ($command instanceof RcptTo) {
-      $this->addRctpTo($command);
-    }
-    elseif ($command instanceof Greeting) {
-      $this->setGreeting($command);
-    }
-    elseif ($command instanceof MailFrom) {
-      $this->setMailFrom($command);
-    }
-    elseif ($command instanceof Data) {
-      $this->setData($command);
-    }
+		$this->commandQueue[] = $command;
 	}
 
-	public function reset(): void
-	{
-		$this->greeting = null;
-		$this->mailFrom = null;
-		$this->rcptTos = [];
-		$this->data = null;
-		$this->endOfData = null;
-		$this->closeDataStream();
-	}
-
-	public function closeDataStream(): ?bool
-	{
-		$dataStream = $this->dataStream;
-		$this->dataStream = null;
-		if ($dataStream) {
-			return fclose($dataStream);
-		}
-		return null;
-	}
-
-	public function setGreeting(Greeting $greeting)
+	public function receiveGreeting(Greeting $greeting)
 	{
 		$this->greeting = $greeting;
+		$this->transcript[] = new CommandReplyPair(null, $greeting);
 	}
 
-	public function setMailFrom(MailFrom $mailFrom)
+	public function getTranscript(): array
 	{
-		$this->mailFrom = $mailFrom;
+		return $this->transcript;
 	}
 
-	public function addRctpTo(RcptTo $rcptTo)
+	public function getState(): TransactionState
 	{
-		$this->rcptTos[] = $rcptTo;
+		return $this->state;
 	}
 
-	public function setData(Data $data)
+	public function receiveReply(Reply $reply)
 	{
-		$this->data = $data;
-		$this->dataStream = fopen('php://temp', 'w+');
-	}
+		$cmd = null;
 
-	public function writeData(string $data): int
-	{
-		$result = fwrite($this->dataStream, $data);
-		if ($result === false) {
-			throw new IOException('Unable to write to the transaction data stream');
+		// The greeting does not belong to a command
+		if ($reply instanceof Greeting) {
+			$this->state->greeting = $reply;
 		}
-		return $result;
+
+		// All other replies SHOULD have a command waiting in the queue
+		// Stray replies may not break everything, but it is against the spec.
+		else {
+			$cmd = array_shift($this->commandQueue);
+		}
+
+		$this->transcript[] = new CommandReplyPair($cmd, $reply);
+
+		if ($reply->code->isSuccess()) {
+			if ($cmd instanceof Rset) {
+				$this->state->reset();
+			}
+			elseif ($cmd instanceof Helo) {
+				$this->state->helo = $cmd;
+			}
+			elseif ($cmd instanceof Ehlo) {
+				$this->state->ehlo = $cmd;
+			}
+			elseif ($cmd instanceof MailFrom) {
+				$this->state->mailFrom = $cmd;
+			}
+			elseif ($cmd instanceof RcptTo) {
+				$this->state->rcptTos[] = $cmd;
+			}
+			elseif ($cmd instanceof Data) {
+				$this->state->data = $cmd;
+			}
+			elseif ($cmd instanceof EndOfData) {
+				$this->state->endOfData = $cmd;
+			}
+			elseif ($cmd instanceof Quit) {
+				$this->state->quit = $cmd;
+			}
+		}
 	}
 }
