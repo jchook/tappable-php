@@ -3,10 +3,18 @@
 namespace Tap\Smtp\Test;
 
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use Tap\Smtp\Element\Command\Data;
 use Tap\Smtp\Element\Command\Ehlo;
+use Tap\Smtp\Element\Command\Expn;
 use Tap\Smtp\Element\Command\Helo;
+use Tap\Smtp\Element\Command\Help;
 use Tap\Smtp\Element\Command\MailFrom;
+use Tap\Smtp\Element\Command\Noop;
+use Tap\Smtp\Element\Command\Quit;
 use Tap\Smtp\Element\Command\RcptTo;
+use Tap\Smtp\Element\Command\Rset;
+use Tap\Smtp\Element\Command\Vrfy;
 use Tap\Smtp\Element\ForwardPath;
 use Tap\Smtp\Element\Mailbox;
 use Tap\Smtp\Element\OriginAddressLiteral;
@@ -96,11 +104,59 @@ class RendererTest extends TestCase
       "MAIL FROM:<\"{$localPart}\"@{$domain}>\r\n",
       $renderer->renderCommand($mailFrom)
     );
+    $this->assertSame(
+      "RCPT TO:<\"{$localPart}\"@{$domain}>\r\n",
+      $renderer->renderCommand($rcptTo)
+    );
     $renderer = new Renderer(smtputf8: false);
     $this->assertSame(
       "MAIL FROM:<\"{$localPart}\"@{$domainAscii}>\r\n",
       $renderer->renderCommand($mailFrom)
     );
+  }
+
+  public function testRenderBasicCommands()
+  {
+    $commands = [
+      new Data(),
+      new Rset(),
+      new Quit(),
+    ];
+    $r = new Renderer();
+    foreach ($commands as $command) {
+      $this->assertSame(
+        $command->getVerb() . "\r\n",
+        $r->renderCommand($command)
+      );
+    }
+  }
+
+  public function testRenderStringCommands()
+  {
+    $commandClasses = [
+			Expn::class,
+			Help::class,
+			Noop::class,
+			Vrfy::class,
+    ];
+    $r = new Renderer();
+    foreach ($commandClasses as $commandClass) {
+      $reflect = new ReflectionClass($commandClass);
+      $optional = $reflect->getConstructor()->getParameters()[0]->isOptional();
+      if ($optional) {
+        $command = $reflect->newInstance();
+        $this->assertSame(
+          $command->getVerb() . "\r\n",
+          $r->renderCommand($command)
+        );
+      }
+      $string = 'test string';
+      $command = $reflect->newInstance($string);
+      $this->assertSame(
+        $command->getVerb() . " $string\r\n",
+        $r->renderCommand($command)
+      );
+    }
   }
 }
 

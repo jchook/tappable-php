@@ -67,7 +67,7 @@ class Renderer
 		}
 
 		elseif ($cmd instanceof RcptTo) {
-			$str[] = 'FROM:' . $this->renderPath($cmd->forwardPath);
+			$str[] = 'TO:' . $this->renderPath($cmd->forwardPath);
 			if ($cmd->params) {
 				$str[] = $this->renderParams($cmd->params);
 			}
@@ -116,7 +116,7 @@ class Renderer
 		if (is_null($value)) {
 			return $name;
 		}
-		return $name . '=' . $this->stringifyValue($value);
+		return $name . '=' . $this->stringifyParamValue($value);
 	}
 
 	/**
@@ -219,7 +219,7 @@ class Renderer
 	 * hexchar = ASCII "+" immediately followed by two upper case hexadecimal
 	 *   digits
 	 */
-	private function stringifyValue(string $value): string
+	private function stringifyParamValue(string $value): string
 	{
 		// "esmtp-value"
 		if (!preg_match('/[\x00-\x20\x7F-\xFF=+ ]/', $value)) {

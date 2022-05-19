@@ -25,7 +25,7 @@ class Help extends CommandBase
 {
   public string $verb = 'HELP';
 	public function __construct(
-    public string $string
+    public ?string $string = null,
 	)
 	{
 	}
