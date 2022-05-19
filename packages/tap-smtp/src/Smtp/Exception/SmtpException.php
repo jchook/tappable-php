@@ -2,9 +2,10 @@
 
 namespace Tap\Smtp\Exception;
 
-class IOException extends SmtpException
+class SmtpException
 {
 }
+
 
 
 

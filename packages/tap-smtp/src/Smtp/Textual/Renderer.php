@@ -79,6 +79,7 @@ class Renderer
 			$cmd instanceof Noop ||
 			$cmd instanceof Vrfy
 		) {
+			// One string only
 			if (!is_null($cmd->string)) {
 				$str[] = $cmd->string;
 			}

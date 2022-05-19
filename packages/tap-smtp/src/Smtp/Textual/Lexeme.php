@@ -10,22 +10,19 @@ class Lexeme
 	 * Dot-string = Atom *("." Atom)
 	 * Atom = 1*atext
 	 */
-	public static function isDotString(string $str, bool $global = false): bool
+	public static function isDotString(string $str, bool $smtputf8 = false): bool
 	{
 		if (!$str) {
 			return false;
 		}
 		$parts = explode('.', $str);
-		if ($parts[0] === '') {
-			return false;
-		}
 		foreach ($parts as $part) {
-			if (!self::isAText($part, $global)) {
+			if ($part === '') {
 				return false;
 			}
-		}
-		if ($part === '') {
-			return false;
+			if (!self::isAText($part, $smtputf8)) {
+				return false;
+			}
 		}
 		return true;
 	}
@@ -36,9 +33,9 @@ class Lexeme
 	 *  "!" / "#" / "$" / "%" / "&" "*" / "+" /
 	 *  "-" / "/" / "=" / "?" / "^" / "_" / "`" / "{" / "|" / "}" / "~"
 	 */
-	public static function isAText(string $str, bool $global = false): bool
+	public static function isAText(string $str, bool $smtputf8 = false): bool
 	{
-		if ($global) {
+		if ($smtputf8) {
 			return ! preg_match('/[\x00-\x1F\x7F()<>@.,;:\\\\"\[\] ]/', $str);
 		}
 		return ! preg_match('/[\x00-\x1F\x7F()<>@.,;:\\\\"\[\] \x80-\xFF]/', $str);
