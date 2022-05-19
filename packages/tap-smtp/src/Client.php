@@ -2,14 +2,11 @@
 
 namespace Tap\Smtp;
 
-use Tap\App;
 use Tap\Smtp\Middleware\Smtp;
-use Tap\Tappable;
+use Tap\TappableBase;
 
-class Client implements Tappable
+class Client extends TappableBase
 {
-  use App;
-
   public function __construct(
     public Smtp $smtp = new Smtp(),
   )

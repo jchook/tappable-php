@@ -9,9 +9,9 @@ similar to redux, express, haraka, etc.
 
 ## Concepts
 
-A `Tap` is a plugin that can be added to a `Tappable` app.
+A `Tappable` app can accept arbitrary plugins.
 
-An `Action` is the common interface between all plugins.
+An `Action` is the common interface between its plugins.
 
 Whenever a `Tappable` app dispatches an `Action`, it passes sequentially through
 each registered plugin. Plugins can respond to any action of the application or
@@ -27,19 +27,19 @@ versatile, statically-typed interoperability and powerful control flow.
 
 ## Example Usage
 
-The simple skeleton for a `Tappable` app looks like this:
+The simple skeleton for a `Tappable` app looks like this.
 
 ```php
 <?php
 
 class MyApp extends TappableBase {}
 
-class MyTap extends TapBase {}
+class MyPlugin extends TapBase {}
 
 class MyAction extends ActionBase {}
 
 $app = new MyApp();
-$app->tap(new MyTap());
+$app->tap(new MyPlugin());
 $app->dispatch(new MyAction());
 
 ?>

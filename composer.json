@@ -5,7 +5,8 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Tap\\": "src/"
+            "Tap\\": "src/",
+            "Tap\\Smtp\\": "packages/tap-smtp/src/"
         }
     },
     "authors": [
