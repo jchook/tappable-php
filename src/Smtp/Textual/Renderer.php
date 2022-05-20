@@ -21,14 +21,97 @@ use Tap\Smtp\Element\OriginDomain;
 use Tap\Smtp\Element\OriginAddressLiteral;
 use Tap\Smtp\Element\Param;
 use Tap\Smtp\Element\Path;
+use Tap\Smtp\Element\Reply\GenericReply;
+use Tap\Smtp\Element\Reply\Greeting;
+use Tap\Smtp\Element\Reply\Reply;
 use Tap\Smtp\Element\ReversePath;
 
 class Renderer
 {
+	const CRLF = "\r\n";
+
 	public function __construct(
 		public bool $smtputf8 = false,
 	)
 	{
+	}
+
+	/**
+	 * Greeting   = ( "220 " (Domain / address-literal)
+	 *            [ SP textstring ] CRLF ) /
+	 *            ( "220-" (Domain / address-literal)
+	 *            [ SP textstring ] CRLF
+	 *            *( "220-" [ textstring ] CRLF )
+	 *            "220" [ SP textstring ] CRLF )
+	 *
+	 * textstring = 1*(%d09 / %d32-126) ; HT, SP, Printable US-ASCII
+	 *
+	 * Reply-line = *( Reply-code "-" [ textstring ] CRLF )
+	 *            Reply-code [ SP textstring ] CRLF
+	 *
+	 * Reply-code = %x32-35 %x30-35 %x30-39
+	 *
+	 */
+	public function renderReply(Reply $reply): string
+	{
+		if ($reply instanceof Greeting) {
+			return $this->renderGreeting($reply);
+		}
+		if ($reply instanceof GenericReply) {
+			return $this->renderGenericReply($reply);
+		}
+		throw new InvalidArgumentException(
+			'Unrecognized reply type: ' . get_class($reply)
+		);
+	}
+
+	/**
+	 * Greeting =
+	 *   ("220 " (Domain / address-literal) [ SP textstring ] CRLF ) /
+	 *   (
+	 *     "220-" (Domain / address-literal) [ SP textstring ] CRLF
+	 *     *( "220-" [ textstring ] CRLF )
+	 *     "220" [ SP textstring ] CRLF
+	 *   )
+	 */
+	public function renderGreeting(Greeting $reply): string
+	{
+		$str = [];
+		$origin = $this->renderOrigin($reply->origin);
+		$messages = $reply->messages;
+		if (count($messages) > 1) {
+			$last = count($messages) - 1;
+			$str[] = '220-' . $origin . ' ' . $messages[0];
+			for ($ii = 1; $ii < $last; $ii++) {
+				$str[] = '220-' . $messages[$ii];
+			}
+			$str[] = '220 ' . $messages[$last];
+		} elseif (count($messages) === 1) {
+			$str[] = '220 ' . $origin . ' ' . $messages[0];
+		} else {
+			$str[] = '220 ' . $origin;
+		}
+		return implode('', $str) . self::CRLF;
+	}
+
+	public function renderGenericReply(GenericReply $reply): string
+	{
+		$str = [];
+		$code = $reply->code->value;
+		$messages = $reply->messages;
+		$count = count($messages);
+		if ($count > 1) {
+			$last = $count - 1;
+			for ($ii = 0; $ii < $last; $ii++) {
+				$str[] = $code . '-' . $messages[$ii];
+			}
+			$str[] = $code . ' ' . $messages[$last];
+		} else {
+			$str[] = $code . (
+				$messages ? ' ' . $messages[0] : ''
+			);
+		}
+		return implode('', $str) . self::CRLF;
 	}
 
 	/**
@@ -93,7 +176,7 @@ class Renderer
 			// Verb only
 		}
 
-		return implode(' ', $str) . "\r\n";
+		return implode(' ', $str) . self::CRLF;
 	}
 
 	/**

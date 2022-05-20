@@ -13,5 +13,10 @@ class GenericReply implements Reply
 	)
 	{
 	}
+
+	public function getCode(): Code
+	{
+		return $this->code;
+	}
 }
 

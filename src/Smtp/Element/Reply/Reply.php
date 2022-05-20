@@ -85,5 +85,5 @@ namespace Tap\Smtp\Element\Reply;
  */
 interface Reply
 {
-  public Code $code;
+  public function getCode(): Code;
 }

@@ -27,5 +27,10 @@ class Greeting implements Reply
 	{
 		$this->code = new Code(220);
 	}
+
+	public function getCode(): Code
+	{
+		return $this->code;
+	}
 }
 

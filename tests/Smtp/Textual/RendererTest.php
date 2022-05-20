@@ -19,6 +19,7 @@ use Tap\Smtp\Element\ForwardPath;
 use Tap\Smtp\Element\Mailbox;
 use Tap\Smtp\Element\OriginAddressLiteral;
 use Tap\Smtp\Element\OriginDomain;
+use Tap\Smtp\Element\Reply\Greeting;
 use Tap\Smtp\Element\ReversePath;
 use Tap\Smtp\Textual\Renderer;
 
@@ -61,7 +62,7 @@ class RendererTest extends TestCase
     $this->assertSame(
       $domainUA,
       $rA->renderOrigin($oU),
-      'Automatic IDN conversion for non-smtpUTF8',
+      'Automatic IDN conversion for non-smtputf8',
     );
   }
 
@@ -92,26 +93,41 @@ class RendererTest extends TestCase
 
   public function testRenderMailRctp()
   {
+    // Some background: According to RFC 6530 and related documents, an
+    // internationalized domain name can appear in two forms: the UTF-8 form,
+    // and the ASCII (xn--mumble) form. An internationalized address localpart
+    // must be encoded in UTF-8; the RFCs do not define an ASCII alternative
+    // form.
     $localPart = 'mister🦆';
     $domain = '🦆.ducks.gov';
-    $domainAscii = idn_to_ascii($domain);
+    $domainA = idn_to_ascii($domain);
+    $path = "<\"{$localPart}\"@{$domain}>";
+    $pathA = "<\"{$localPart}\"@{$domainA}>";
     $origin = new OriginDomain($domain);
     $mailbox = new Mailbox($localPart, $origin);
     $mailFrom = new MailFrom(new ReversePath($mailbox));
     $rcptTo = new RcptTo(new ForwardPath($mailbox));
     $renderer = new Renderer(smtputf8: true);
     $this->assertSame(
-      "MAIL FROM:<\"{$localPart}\"@{$domain}>\r\n",
+      "MAIL FROM:$path\r\n",
       $renderer->renderCommand($mailFrom)
     );
     $this->assertSame(
-      "RCPT TO:<\"{$localPart}\"@{$domain}>\r\n",
+      "RCPT TO:$path\r\n",
       $renderer->renderCommand($rcptTo)
+    );
+    $this->assertSame(
+      "MAIL FROM:$path\r\n",
+      $renderer->renderCommand($mailFrom)
     );
     $renderer = new Renderer(smtputf8: false);
     $this->assertSame(
-      "MAIL FROM:<\"{$localPart}\"@{$domainAscii}>\r\n",
+      "MAIL FROM:$pathA\r\n",
       $renderer->renderCommand($mailFrom)
+    );
+    $this->assertSame(
+      "RCPT TO:$pathA\r\n",
+      $renderer->renderCommand($rcptTo)
     );
   }
 
@@ -142,7 +158,7 @@ class RendererTest extends TestCase
     $r = new Renderer();
     foreach ($commandClasses as $commandClass) {
       $reflect = new ReflectionClass($commandClass);
-      $optional = $reflect->getConstructor()->getParameters()[0]->isOptional();
+      $optional = $reflect->getConstructor()?->getParameters()[0]?->isOptional();
       if ($optional) {
         $command = $reflect->newInstance();
         $this->assertSame(
@@ -157,6 +173,19 @@ class RendererTest extends TestCase
         $r->renderCommand($command)
       );
     }
+  }
+
+  public function testRenderGreeting()
+  {
+    $domain = 'normal.domain';
+    $origin = new OriginDomain($domain);
+    $messages = [];
+    $greeting = new Greeting($origin, $messages);
+    $r = new Renderer();
+    $this->assertSame(
+      '220 ' . $domain . "\r\n",
+      $r->renderGreeting($greeting)
+    );
   }
 }
 
