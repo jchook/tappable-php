@@ -15,10 +15,10 @@ class ReplyTest extends TestCase
     ];
     foreach ($codes as [$num, $success, $tempFail, $permFail]) {
       $code = new Code($num);
-      $this->assertEquals($success, $code->isSuccess());
-      $this->assertEquals($tempFail, $code->isTempFail());
-      $this->assertEquals($permFail, $code->isPermFail());
-      $this->assertEquals($permFail || $tempFail, $code->isFail());
+      $this->assertSame($success, $code->isSuccess());
+      $this->assertSame($tempFail, $code->isTempFail());
+      $this->assertSame($permFail, $code->isPermFail());
+      $this->assertSame($permFail || $tempFail, $code->isFail());
     }
   }
 
@@ -27,8 +27,8 @@ class ReplyTest extends TestCase
     $code = new Code(220);
     $messages = ['Ok'];
     $reply = new GenericReply($code, $messages);
-    $this->assertEquals($code, $reply->getCode());
-    $this->assertEquals($messages, $reply->messages);
+    $this->assertSame($code, $reply->getCode());
+    $this->assertSame($messages, $reply->messages);
   }
 }
 

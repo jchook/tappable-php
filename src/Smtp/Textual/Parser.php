@@ -6,6 +6,7 @@ use InvalidArgumentException;
 use Tap\Smtp\Element\Command\Command;
 use Tap\Smtp\Element\Command\Data;
 use Tap\Smtp\Element\Command\Ehlo;
+use Tap\Smtp\Element\Command\EndOfData;
 use Tap\Smtp\Element\Command\Expn;
 use Tap\Smtp\Element\Command\Helo;
 use Tap\Smtp\Element\Command\Help;
@@ -55,8 +56,21 @@ class Parser
 	{
 		$words = explode(' ', trim($line));
 		$verb = strtoupper($words[0]);
-		switch ($verb) {
+		$string = null;
 
+		// Command only
+		switch ($verb) {
+		case 'DATA':
+		case 'RSET':
+		case 'QUIT':
+		case '.':
+			if (count($words) > 1) {
+				throw $this->syntaxError('Unexpected token after command verb ' . $verb);
+			}
+		}
+
+		// Commands with a single string
+		switch ($verb) {
 		case 'HELO':
 			$origin = new OriginDomain($words[1]);
 			return new Helo($origin);
@@ -69,7 +83,7 @@ class Parser
 			[,$pathStr] = $this->expectRegex('/^FROM:(<[^>]*>)$/i', $words[1]);
 			$path = $this->parseReversePath($pathStr);
 			$params = $this->parseParams(array_slice($words, 2));
-			return new MailFrom($path, ...$params);
+			return new MailFrom($path, $params);
 
 		case 'RCPT':
 			[,$pathStr] = $this->expectRegex('/^TO:(<[^>]+>)$/i', $words[1]);
@@ -77,45 +91,21 @@ class Parser
 			$params = $this->parseParams(array_slice($words, 2));
 			return new RcptTo($path, ...$params);
 
-		case 'DATA':
-		case 'RSET':
-		case 'QUIT':
-			if (count($words) > 1) {
-				throw $this->syntaxError('Unexpected token after ' . $verb);
-			}
-			return $this->parseCommandSimple($verb);
-
-		case 'EXPN':
-		case 'HELP':
-		case 'NOOP':
-		case 'VRFY':
-			$string = implode(' ', array_slice($words, 1));
-			return $this->parseCommandWithOneString($verb, $string);
-
-		default:
-			$string = count($words) > 1 ? implode(' ', array_slice($words, 1)) : null;
-			return new Unknown($verb, $string);
-		}
-	}
-
-	protected function parseCommandWithOneString(string $verb, string $string): Command
-	{
-		switch ($verb) {
-		case 'EXPN': return new Expn($string);
-		case 'HELP': return new Help($string);
-		case 'NOOP': return new Noop($string);
-		case 'VRFY': return new Vrfy($string);
-		default: throw $this->syntaxError('Unexpected command with string: ' . $verb);
-		}
-	}
-
-	protected function parseCommandSimple(string $verb): Command
-	{
-		switch ($verb) {
 		case 'DATA': return new Data();
 		case 'RSET': return new Rset();
 		case 'QUIT': return new Quit();
-		default: throw $this->syntaxError('Unexpected simple command: ' . $verb);
+		case '.': return new EndOfData();
+		}
+
+		// The rest of these commands accept a single string argument
+		$string = count($words) > 1 ? implode(' ', array_slice($words, 1)) : null;
+
+		switch ($verb) {
+		case 'EXPN': return new Expn($string ?? '');
+		case 'HELP': return new Help($string);
+		case 'NOOP': return new Noop($string);
+		case 'VRFY': return new Vrfy($string ?? '');
+		default: return new Unknown($verb, $string);
 		}
 	}
 
@@ -127,7 +117,7 @@ class Parser
 	{
 		$matches = [];
 		$result = preg_match($pattern, $subject, $matches);
-		if ($result === false) {
+		if ($result === false || $result === 0) {
 			throw new InvalidArgumentException(
 				'Syntax error: ' . ($errorMsg ?? 'unexpected characters encountered')
 			);
@@ -235,7 +225,7 @@ class Parser
 	 *
 	 *   String         = Atom / Quoted-string
 	 */
-	private function parseReversePath(string $path): ReversePath
+	public function parseReversePath(string $path): ReversePath
 	{
 		// Null sender?
 		if ($path === '<>') {
@@ -246,7 +236,7 @@ class Parser
 		return new ReversePath($mailbox);
 	}
 
-	private function parseForwardPath(string $path): ForwardPath
+	public function parseForwardPath(string $path): ForwardPath
 	{
 		$mailboxStr = $this->extractMailboxFromPathString($path);
 		$mailbox = $this->parseMailbox($mailboxStr);
@@ -275,7 +265,7 @@ class Parser
 		return new InvalidArgumentException('Syntax error: ' . $message);
 	}
 
-	private function parseMailbox(string $mailboxStr): Mailbox
+	public function parseMailbox(string $mailboxStr): Mailbox
 	{
 		// Find the position of the last @
 		$atPos = strrpos($mailboxStr, '@');
@@ -327,6 +317,17 @@ class Parser
 	 */
 	private function parseLocalPart(string $localPart): string
 	{
+		// We must pass `true` to isDotString() here because RFC 6530 et al do
+		// not provide an ASCII alternative / encoding for <Local-part>.
+		//
+		// It's not easy to fully grok from the specs, but the Postfix SMTPUTF8
+		// docs explicitly mention this specific problem:
+		//
+		// > Some background: According to RFC 6530 and related documents, an
+		// > internationalized domain name can appear in two forms: the UTF-8 form,
+		// > and the ASCII (xn--mumble) form. An internationalized address localpart
+		// > must be encoded in UTF-8; the RFCs do not define an ASCII alternative
+		// > form.
 		return Lexeme::isDotString($localPart, true)
 			? $localPart
 			: $this->parseQuotedString($localPart);
@@ -352,10 +353,10 @@ class Parser
 	private function parseQuotedString(string $str): string
 	{
 		if (substr($str, 0, 1) !== '"') {
-			$this->syntaxError('Invalid quoted string, missing open quote');
+			throw $this->syntaxError('Invalid quoted string, missing open quote');
 		}
 		if (substr($str, -1, 1) !== '"') {
-			$this->syntaxError('Invalid quoted string, missing close quote');
+			throw $this->syntaxError('Invalid quoted string, missing close quote');
 		}
 		$str = substr($str, 1, -1);
 		// TODO: Not sure if this actually works in all cases. I think it does?
@@ -376,8 +377,9 @@ class Parser
 	 */
 	protected function parseXtext(string $str): string
 	{
-		return preg_replace_callback('/\+([0-9A-F]){2}/i', function ($matches) {
-			return chr(hexdec($matches[1]));
+		return preg_replace_callback('/\+([0-9A-F]{2})/i', function ($matches) {
+			$chr = chr(hexdec($matches[1]));
+			return $chr;
 		}, $str);
 	}
 }

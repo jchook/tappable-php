@@ -299,27 +299,31 @@ class Renderer
 	 */
 	private function stringifyParamValue(string $value): string
 	{
-		// "esmtp-value"
-		if (!preg_match('/[\x00-\x20\x7F-\xFF=+ ]/', $value)) {
-			return $value;
-		}
+		return preg_replace_callback(
+			'/[\x00-\x20\x7F-\xFF=+ ]/',
+			function ($matches) {
+				return sprintf('+%02X', ord($matches[0]));
+			},
+			$value
+		);
 
-		// "xtext"
-		$final = '';
-		$ii = 0;
-		do {
-			$chr = $value[$ii];
-			$ord = ord($chr);
-			if ($ord < 0x21 || $ord > 0x7e || $chr === '=' || $chr === '+') {
-				$final .= sprintf('+%02X', $ord);
-			} else {
-				$final .= $chr;
-			}
-		} while (isset($value[++$ii]));
-		return $final;
-	}
+		// // "esmtp-value"
+		// if (!preg_match('/[\x00-\x20\x7F-\xFF=+ ]/', $value)) {
+		// 	return $value;
+		// }
 
-	public function renderXtext(string $value): string
-	{
+		// // "xtext"
+		// $final = '';
+		// $ii = 0;
+		// do {
+		// 	$chr = $value[$ii];
+		// 	$ord = ord($chr);
+		// 	if ($ord < 0x21 || $ord > 0x7e || $chr === '=' || $chr === '+') {
+		// 		$final .= sprintf('+%02X', $ord);
+		// 	} else {
+		// 		$final .= $chr;
+		// 	}
+		// } while (isset($value[++$ii]));
+		// return $final;
 	}
 }

@@ -3,15 +3,12 @@
 namespace Tap\State;
 
 use Tap\Action;
-use Tap\BasicTap;
-use Tap\Tap;
+use Tap\TapBase;
 
-class State implements Tap
+class Stateful implements TapBase
 {
-  use BasicTap;
-
   public function __construct(
-    protected Reducer $reducer,
+    protected callable $reducer,
     protected $state = null,
   )
   {
@@ -19,10 +16,10 @@ class State implements Tap
 
   public function __invoke(Action $action)
   {
-    $this->state = $this->reducer->reduce($this->state, $action);
+    $this->state = ($this->reducer)($this->state, $action);
   }
 
-  public function replaceReducer(Reducer $reducer): void
+  public function replaceReducer(callable $reducer): void
   {
     $this->reducer = $reducer;
   }

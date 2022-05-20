@@ -6,6 +6,6 @@ use Tap\Action;
 
 interface Reducer
 {
-  public function reduce($state, Action $action);
+  public function __invoke($state, Action $action);
 }
 

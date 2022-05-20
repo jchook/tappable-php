@@ -283,6 +283,16 @@ class RendererTest extends TestCase
       $r->renderReply($reply)
     );
   }
+
+  public function testRenderParam()
+  {
+    $renderer = new Renderer();
+    $param = new Param('MUSHROOM', 'THIS->🍄');
+    $this->assertSame(
+      'MUSHROOM=THIS->+F0+9F+8D+84',
+      $renderer->renderParam($param),
+    );
+  }
 }
 
 class MyForeignPath implements Path {
