@@ -19,9 +19,9 @@ namespace Tap\Smtp\Element\Command;
  */
 class Noop extends CommandBase
 {
-  public string $verb = 'NOOP';
+	public string $verb = 'NOOP';
 	public function __construct(
-    public ?string $string = null
+		public ?string $string = null
 	)
 	{
 	}

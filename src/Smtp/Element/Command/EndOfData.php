@@ -48,7 +48,7 @@ namespace Tap\Smtp\Element\Command;
  */
 class EndOfData extends CommandBase
 {
-  public string $verb = '.';
+	public string $verb = '.';
 	public function __construct(
 	)
 	{

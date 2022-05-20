@@ -23,10 +23,8 @@ use Tap\Smtp\Element\OriginDomain;
 use Tap\Smtp\Element\OriginAddressLiteral;
 use Tap\Smtp\Element\Param;
 use Tap\Smtp\Element\Reply\Code;
-use Tap\Smtp\Element\Reply\Reply;
 use Tap\Smtp\Element\Reply\ReplyLine;
 use Tap\Smtp\Element\ReversePath;
-use Tap\Smtp\Exception\TimeoutException;
 
 class Parser
 {

@@ -21,9 +21,9 @@ namespace Tap\Smtp\Element\Command;
  */
 class Expn extends CommandBase
 {
-  public string $verb = 'EXPN';
+	public string $verb = 'EXPN';
 	public function __construct(
-    public string $string
+		public string $string
 	)
 	{
 	}

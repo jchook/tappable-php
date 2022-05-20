@@ -87,9 +87,9 @@ use Tap\Smtp\Element\Origin;
  */
 class Ehlo extends CommandBase
 {
-  public string $verb = 'EHLO';
+	public string $verb = 'EHLO';
 	public function __construct(
-    public Origin $origin
+		public Origin $origin
 	)
 	{
 	}

@@ -10,8 +10,8 @@ namespace Tap\Smtp\Element\Command;
 class Unknown extends CommandBase
 {
 	public function __construct(
-    public string $verb,
-    public ?string $string = null
+		public string $verb,
+		public ?string $string = null
 	)
 	{
 	}

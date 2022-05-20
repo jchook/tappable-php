@@ -12,9 +12,9 @@ use Tap\Smtp\Element\OriginDomain;
  */
 class Helo extends CommandBase
 {
-  public string $verb = 'HELO';
+	public string $verb = 'HELO';
 	public function __construct(
-    public OriginDomain $origin
+		public OriginDomain $origin
 	)
 	{
 	}

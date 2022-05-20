@@ -75,7 +75,7 @@ namespace Tap\Smtp\Element\Command;
  */
 class Data extends CommandBase
 {
-  public string $verb = 'DATA';
+	public string $verb = 'DATA';
 	public function __construct(
 	)
 	{

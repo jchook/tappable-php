@@ -9,6 +9,9 @@ coverage *args="":
 readme:
   grip
 
+serve:
+  npx http-server
+
 tests *args="":
   bin/tests "$@"
 

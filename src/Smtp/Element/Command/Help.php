@@ -23,9 +23,9 @@ namespace Tap\Smtp\Element\Command;
  */
 class Help extends CommandBase
 {
-  public string $verb = 'HELP';
+	public string $verb = 'HELP';
 	public function __construct(
-    public ?string $string = null,
+		public ?string $string = null,
 	)
 	{
 	}

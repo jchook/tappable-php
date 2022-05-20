@@ -2,7 +2,6 @@
 
 namespace Tap\Smtp\Element\Command;
 
-
 interface Command
 {
   public function getVerb(): string;

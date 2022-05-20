@@ -28,7 +28,7 @@ namespace Tap\Smtp\Element\Command;
  */
 class Quit extends CommandBase
 {
-  public string $verb = 'QUIT';
+	public string $verb = 'QUIT';
 	public function __construct(
 	)
 	{

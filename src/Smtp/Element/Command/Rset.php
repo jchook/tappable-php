@@ -34,7 +34,7 @@ namespace Tap\Smtp\Element\Command;
  */
 class Rset extends CommandBase
 {
-  public string $verb = 'RSET';
+	public string $verb = 'RSET';
 	public function __construct(
 	)
 	{

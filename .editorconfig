@@ -1,0 +1,29 @@
+[bin/*]
+end_of_line = lf
+indent_style = space
+indent_size = 2
+trim_trailing_whitespace = true
+
+[*.php]
+end_of_line = lf
+indent_style = tab
+indent_size = 2
+trim_trailing_whitespace = true
+
+[*.js,*.json]
+end_of_line = lf
+indent_style = space
+indent_size = 2
+trim_trailing_whitespace = true
+
+[*.mime]
+end_of_line = crlf
+indent_style = unset
+indent_size = unset
+trim_trailing_whitespace = unset
+insert_final_newline = unset
+
+[Makefile]
+end_of_line = lf
+indent_style = tab
+indent_size = 2

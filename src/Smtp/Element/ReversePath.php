@@ -5,7 +5,7 @@ namespace Tap\Smtp\Element;
 class ReversePath implements Path
 {
 	public function __construct(
-		public ?Mailbox $mailbox = null
+		public ?Mailbox $mailbox
 	)
 	{
 	}

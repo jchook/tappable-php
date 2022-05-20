@@ -35,17 +35,15 @@ use Tap\Smtp\Element\ReversePath;
  */
 class MailFrom extends CommandBase
 {
-  public string $verb = 'MAIL';
-  /**
-   * @var Param[]
-   */
-  public array $params = [];
+	public string $verb = 'MAIL';
 	public function __construct(
-    public ReversePath $reversePath,
-    ...$params,
+		public ReversePath $reversePath,
+		/**
+		 * @var Param[]
+		 */
+		public array $params = [],
 	)
 	{
-    $this->params = $params;
 	}
 }
 

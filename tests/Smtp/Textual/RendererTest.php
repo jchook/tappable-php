@@ -2,6 +2,7 @@
 
 namespace Tap\Smtp\Test;
 
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use Tap\Smtp\Element\Command\Data;
@@ -14,12 +15,19 @@ use Tap\Smtp\Element\Command\Noop;
 use Tap\Smtp\Element\Command\Quit;
 use Tap\Smtp\Element\Command\RcptTo;
 use Tap\Smtp\Element\Command\Rset;
+use Tap\Smtp\Element\Command\Unknown;
 use Tap\Smtp\Element\Command\Vrfy;
 use Tap\Smtp\Element\ForwardPath;
 use Tap\Smtp\Element\Mailbox;
+use Tap\Smtp\Element\Origin;
 use Tap\Smtp\Element\OriginAddressLiteral;
 use Tap\Smtp\Element\OriginDomain;
+use Tap\Smtp\Element\Param;
+use Tap\Smtp\Element\Path;
+use Tap\Smtp\Element\Reply\Code;
+use Tap\Smtp\Element\Reply\GenericReply;
 use Tap\Smtp\Element\Reply\Greeting;
+use Tap\Smtp\Element\Reply\Reply;
 use Tap\Smtp\Element\ReversePath;
 use Tap\Smtp\Textual\Renderer;
 
@@ -129,6 +137,57 @@ class RendererTest extends TestCase
       "RCPT TO:$pathA\r\n",
       $renderer->renderCommand($rcptTo)
     );
+
+    $mailFrom = new MailFrom(new ReversePath(null), [
+      new Param('PARAM1'),
+      new Param('PARAM2', 'VALUE2'),
+      new Param('PARAM3', '🌵cactus🌵cactus🌵cactus🌵')
+    ]);
+    $this->assertSame(
+      implode(' ', [
+        'MAIL FROM:<>',
+        'PARAM1',
+        'PARAM2=VALUE2',
+        'PARAM3=+F0+9F+8C+B5cactus+F0+9F+8C+B5cactus+F0+9F+8C+B5cactus+F0+9F+8C+B5'
+      ]) . Renderer::CRLF,
+      $renderer->renderCommand($mailFrom)
+    );
+  }
+
+  public function testMailFromWithNormalDomain()
+  {
+    $renderer = new Renderer(smtputf8: false);
+    $mailFrom = new MailFrom(new ReversePath(
+      new Mailbox('normal', new OriginDomain('mailbox.com'))
+    ));
+    $this->assertSame(
+      'MAIL FROM:<normal@mailbox.com>' . Renderer::CRLF,
+      $renderer->renderCommand($mailFrom)
+    );
+  }
+
+  public function testRenderForeignReply()
+  {
+    $this->expectException(InvalidArgumentException::class);
+    $this->expectExceptionMessageMatches('/^Unrecognized/');
+    $renderer = new Renderer();
+    $renderer->renderReply(new MyForeignReply());
+  }
+
+  public function testRenderForeignOrigin()
+  {
+    $this->expectException(InvalidArgumentException::class);
+    $this->expectExceptionMessageMatches('/^Unrecognized/');
+    $renderer = new Renderer();
+    $renderer->renderOrigin(new MyForeignOrigin());
+  }
+
+  public function testRenderForeignPath()
+  {
+    $this->expectException(InvalidArgumentException::class);
+    $this->expectExceptionMessageMatches('/^Unrecognized/');
+    $renderer = new Renderer();
+    $renderer->renderPath(new MyForeignPath());
   }
 
   public function testRenderBasicCommands()
@@ -175,7 +234,19 @@ class RendererTest extends TestCase
     }
   }
 
-  public function testRenderGreeting()
+  public function testRenderUnknownCommand()
+  {
+    $verb = 'UNKN';
+    $string = 'I like turtles';
+    $cmd = new Unknown($verb, $string);
+    $renderer = new Renderer();
+    $this->assertSame(
+      "$verb $string\r\n",
+      $renderer->renderCommand($cmd),
+    );
+  }
+
+  public function testRenderReply()
   {
     $domain = 'normal.domain';
     $origin = new OriginDomain($domain);
@@ -186,7 +257,43 @@ class RendererTest extends TestCase
       '220 ' . $domain . "\r\n",
       $r->renderGreeting($greeting)
     );
+    $messages = ['first message', 'second message', '🌵 message'];
+    $greeting = new Greeting($origin, $messages);
+    $this->assertSame(
+      implode(Renderer::CRLF, [
+        '220-' . $domain . ' first message',
+        '220-second message',
+        '220 🌵 message',
+        '',
+      ]),
+      $r->renderReply($greeting)
+    );
+    $reply = new GenericReply(new Code(510), [
+      'first message',
+      'second message',
+      '🌵 message',
+    ]);
+    $this->assertSame(
+      implode(Renderer::CRLF, [
+        '510-first message',
+        '510-second message',
+        '510 🌵 message',
+        '',
+      ]),
+      $r->renderReply($reply)
+    );
   }
 }
 
+class MyForeignPath implements Path {
+}
 
+class MyForeignOrigin implements Origin {
+}
+
+class MyForeignReply implements Reply {
+  public function getCode(): Code
+  {
+    return new Code(220);
+  }
+}

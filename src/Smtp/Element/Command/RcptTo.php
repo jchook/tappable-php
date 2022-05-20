@@ -80,12 +80,12 @@ class RcptTo extends CommandBase
    * @var Param[]
    */
   public array $params = [];
-	public function __construct(
+  public function __construct(
     public ForwardPath $forwardPath,
     ...$params,
-	)
-	{
+  )
+  {
     $this->params = $params;
-	}
+  }
 }
 

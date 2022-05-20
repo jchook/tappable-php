@@ -18,9 +18,9 @@ namespace Tap\Smtp\Element\Command;
  */
 class Vrfy extends CommandBase
 {
-  public string $verb = 'VRFY';
+	public string $verb = 'VRFY';
 	public function __construct(
-    public string $string
+		public string $string
 	)
 	{
 	}

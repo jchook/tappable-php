@@ -14,6 +14,7 @@ use Tap\Smtp\Element\Command\Noop;
 use Tap\Smtp\Element\Command\Quit;
 use Tap\Smtp\Element\Command\RcptTo;
 use Tap\Smtp\Element\Command\Rset;
+use Tap\Smtp\Element\Command\Unknown;
 use Tap\Smtp\Element\Command\Vrfy;
 use Tap\Smtp\Element\ForwardPath;
 use Tap\Smtp\Element\Origin;
@@ -76,25 +77,18 @@ class Renderer
 	 */
 	public function renderGreeting(Greeting $reply): string
 	{
-		$str = [];
 		$origin = $this->renderOrigin($reply->origin);
 		$messages = $reply->messages;
-		if (count($messages) > 1) {
-			$last = count($messages) - 1;
-			$str[] = '220-' . $origin . ' ' . $messages[0];
-			for ($ii = 1; $ii < $last; $ii++) {
-				$str[] = '220-' . $messages[$ii];
-			}
-			$str[] = '220 ' . $messages[$last];
-		} elseif (count($messages) === 1) {
-			$str[] = '220 ' . $origin . ' ' . $messages[0];
-		} else {
-			$str[] = '220 ' . $origin;
-		}
-		return implode('', $str) . self::CRLF;
+		$messages[0] = !empty($messages[0])
+			? $origin . ' ' . $messages[0]
+			: $origin
+		;
+		return $this->renderGenericReply(
+			new GenericReply($reply->getCode(), $messages)
+		);
 	}
 
-	public function renderGenericReply(GenericReply $reply): string
+	protected function renderGenericReply(GenericReply $reply): string
 	{
 		$str = [];
 		$code = $reply->code->value;
@@ -111,7 +105,7 @@ class Renderer
 				$messages ? ' ' . $messages[0] : ''
 			);
 		}
-		return implode('', $str) . self::CRLF;
+		return implode(self::CRLF, $str) . self::CRLF;
 	}
 
 	/**
@@ -133,7 +127,7 @@ class Renderer
 	 */
 	public function renderCommand(Command $cmd): string
 	{
-		$verb = $cmd->verb;
+		$verb = $cmd->getVerb();
 
 		// Final
 		$str = [$verb];
@@ -160,6 +154,7 @@ class Renderer
 			$cmd instanceof Expn ||
 			$cmd instanceof Help ||
 			$cmd instanceof Noop ||
+			$cmd instanceof Unknown ||
 			$cmd instanceof Vrfy
 		) {
 			// One string only
@@ -322,5 +317,9 @@ class Renderer
 			}
 		} while (isset($value[++$ii]));
 		return $final;
+	}
+
+	public function renderXtext(string $value): string
+	{
 	}
 }
