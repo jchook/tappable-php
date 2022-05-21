@@ -3,7 +3,7 @@
 namespace Tap\Smtp\Role\Client;
 
 use Tap\Smtp\Role\Client\Middleware\ClientBehavior;
-use Tap\Smtp\Support\Transaction;
+use Tap\Smtp\Support\Session;
 use Tap\TappableBase;
 
 class Client extends TappableBase

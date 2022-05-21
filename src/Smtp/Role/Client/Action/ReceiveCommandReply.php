@@ -4,12 +4,12 @@ namespace Tap\Smtp\Role\Client\Action;
 
 use Tap\Smtp\Element\Command\Command;
 use Tap\Smtp\Element\Reply\Reply;
-use Tap\Smtp\Support\Transaction;
+use Tap\Smtp\Support\Session;
 
 class ReceiveCommandReply extends ClientAction
 {
   public function __construct(
-    public Transaction $txn,
+    public Session $txn,
     public Command $command,
     public Reply $reply
   )

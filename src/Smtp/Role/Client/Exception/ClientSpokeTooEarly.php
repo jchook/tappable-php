@@ -2,9 +2,9 @@
 
 namespace Tap\Smtp\Role\Client\Exception;
 
-use Tap\Smtp\Role\Agent\Exception\ProtocolException;
+use Tap\Smtp\Role\Agent\Exception\BehaviorException;
 
-class ClientSpokeTooEarly extends ProtocolException
+class ClientSpokeTooEarly extends BehaviorException
 {
 
 }

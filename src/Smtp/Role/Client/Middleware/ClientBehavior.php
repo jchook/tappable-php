@@ -5,20 +5,20 @@ namespace Tap\Smtp\Role\Client\Middleware;
 use Tap\ReflectiveTap;
 use Tap\Smtp\Element\Command\Ehlo;
 use Tap\Smtp\Element\Origin\Origin;
-use Tap\Smtp\Role\Client\Action\NewTransaction;
+use Tap\Smtp\Role\Client\Action\NewSession;
 use Tap\Smtp\Role\Client\Action\ReceiveCommandReply;
 use Tap\Smtp\Role\Client\Action\ReceiveGreeting;
 use Tap\Smtp\Role\Client\Action\SendCommand;
 use Tap\Smtp\Role\Client\Exception\ClientSpokeTooEarly;
-use Tap\Smtp\Support\Transaction;
+use Tap\Smtp\Support\Session;
 
 class ClientBehavior extends ReflectiveTap
 {
   const DEFAULT_TRANSACTION_ID = 'default';
 
   public function __construct(
-    public Origin $origin = null,
-    public Transaction $txn = new Transaction(self::DEFAULT_TRANSACTION_ID),
+    public Origin $origin,
+    public Session $txn = new Session(self::DEFAULT_TRANSACTION_ID),
   )
   {
   }
@@ -26,11 +26,15 @@ class ClientBehavior extends ReflectiveTap
   protected function handleGreeting(ReceiveGreeting $action): void
   {
     $this->next($action);
-    // TODO
-    // $this->dispatch(new SendCommand(new Ehlo()));
+    $this->dispatch(
+      new SendCommand(
+        $this->txn,
+        new Ehlo($this->origin)
+      )
+    );
   }
 
-  public function handleNewTransaction(NewTransaction $action): void
+  public function handleNewSession(NewSession $action): void
   {
     $this->txn = $action->txn;
     $this->next($action);
@@ -38,7 +42,7 @@ class ClientBehavior extends ReflectiveTap
 
   public function handleReply(ReceiveCommandReply $action): void
   {
-    $action->txn->receiveReply($action->reply);
+    $this->txn->receiveReply($action->reply);
     $this->next($action);
   }
 
@@ -51,7 +55,7 @@ class ClientBehavior extends ReflectiveTap
         $action->command->getVerb() . ' command before receiving server greeting.'
       );
     }
-    $action->txn->receiveCommand($action->command);
+    $this->txn->receiveCommand($action->command);
     $this->next($action);
   }
 }

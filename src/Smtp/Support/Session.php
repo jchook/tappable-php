@@ -34,7 +34,7 @@ use Tap\Smtp\Element\Reply\Reply;
  *   completed.  The sender SHOULD wait for this greeting message before
  *   sending any commands.
  */
-class Transaction
+class Session
 {
 	/**
 	 * @var Command[]
@@ -46,13 +46,13 @@ class Transaction
 	 */
 	protected array $transcript = [];
 
-	protected TransactionState $state;
+	protected SessionState $state;
 
 	public function __construct(
 		public string $id,
 	)
 	{
-		$this->state = new TransactionState();
+		$this->state = new SessionState();
 	}
 
 	public function receiveCommand(Command $command)
@@ -71,7 +71,7 @@ class Transaction
 		return $this->transcript;
 	}
 
-	public function getState(): TransactionState
+	public function getState(): SessionState
 	{
 		return $this->state;
 	}

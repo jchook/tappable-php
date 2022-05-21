@@ -12,7 +12,7 @@ use Tap\Smtp\Element\Reply\Greeting;
 
 /**
  */
-class TransactionState
+class SessionState
 {
 	public function __construct(
 		public ?Greeting $greeting = null,

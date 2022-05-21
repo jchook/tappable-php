@@ -3,7 +3,7 @@ This is a line-based parser so far. Let it be known!
 
 ---
 
-## Transactions
+## Sessions
 
 Unsure whether to allow client and server to manage multiple transactions at a
 time.
