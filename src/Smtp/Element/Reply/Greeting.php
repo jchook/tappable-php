@@ -25,7 +25,7 @@ class Greeting implements Reply
 		public array $messages = [],
 	)
 	{
-		$this->code = new Code(220);
+		$this->code = new Code('220');
 	}
 
 	public function getCode(): Code

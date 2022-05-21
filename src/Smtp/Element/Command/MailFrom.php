@@ -30,8 +30,7 @@ use Tap\Smtp\Element\ReversePath;
  *    carry parameters associated with a particular service extension.
  *    Syntax:
  *
- *    mail = "MAIL FROM:" Reverse-path
- *                                        [SP Mail-parameters] CRLF
+ *    mail = "MAIL FROM:" Reverse-path [SP Mail-parameters] CRLF
  */
 class MailFrom extends CommandBase
 {

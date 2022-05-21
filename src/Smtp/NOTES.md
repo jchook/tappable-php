@@ -1,3 +1,6 @@
+This is a line-based parser so far. Let it be known!
+
+
 4.5.1.  Minimum Implementation
 
    In order to make SMTP workable, the following minimum implementation

@@ -91,7 +91,7 @@ class Transaction
 
 		$this->transcript[] = new CommandReplyPair($cmd, $reply);
 
-		if ($reply->code->isSuccess()) {
+		if ($reply->code->isPositive()) {
 			if ($cmd instanceof Rset) {
 				$this->state->reset();
 			}

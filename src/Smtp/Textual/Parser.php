@@ -157,10 +157,10 @@ class Parser
 	{
 		// Grep the reply code and conintuation indicator
 		[$prefix, $codeStr, $continueStr] =
-			$this->expectRegex('/^([2-5][0-9][0-9])( |-)?/', $replyStr);
+			$this->expectRegex('/^([2-5][0-5][0-9])( |-)?/', $replyStr);
 
 		// Parse the code
-		$code = new Code((int)$codeStr);
+		$code = new Code($codeStr);
 
 		// Snag the full line
 		$message = substr($replyStr, strlen($prefix));

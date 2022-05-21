@@ -268,7 +268,7 @@ class RendererTest extends TestCase
       ]),
       $r->renderReply($greeting)
     );
-    $reply = new GenericReply(new Code(510), [
+    $reply = new GenericReply(new Code('510'), [
       'first message',
       'second message',
       '🌵 message',
@@ -304,6 +304,6 @@ class MyForeignOrigin implements Origin {
 class MyForeignReply implements Reply {
   public function getCode(): Code
   {
-    return new Code(220);
+    return new Code('220');
   }
 }

@@ -6,7 +6,7 @@ use Tap\Action;
 use Tap\Smtp\Element;
 use Tap\Smtp\Support\Transaction;
 
-class Reply implements Action
+class REPLY_SEND implements Action
 {
   public function __construct(
     public Transaction $txn,
