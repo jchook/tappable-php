@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace Tap\Smtp\Element;
+namespace Tap\Smtp\Element\Origin;
 
-class OriginAddressLiteral implements Origin
+class AddressLiteral implements Origin
 {
   public function __construct(
     public string $address
@@ -10,8 +10,4 @@ class OriginAddressLiteral implements Origin
   {
   }
 }
-
-
-
-
 

@@ -17,9 +17,9 @@ use Tap\Smtp\Element\Command\Rset;
 use Tap\Smtp\Element\Command\Unknown;
 use Tap\Smtp\Element\Command\Vrfy;
 use Tap\Smtp\Element\ForwardPath;
-use Tap\Smtp\Element\Origin;
-use Tap\Smtp\Element\OriginDomain;
-use Tap\Smtp\Element\OriginAddressLiteral;
+use Tap\Smtp\Element\Origin\Origin;
+use Tap\Smtp\Element\Origin\Domain;
+use Tap\Smtp\Element\Origin\AddressLiteral;
 use Tap\Smtp\Element\Param;
 use Tap\Smtp\Element\Path;
 use Tap\Smtp\Element\Reply\GenericReply;
@@ -103,7 +103,7 @@ class Renderer
 				$messages ? ' ' . $messages[0] : ''
 			);
 		}
-		return implode(self::CRLF, $str) . self::CRLF;
+		return implode(Lexeme::CRLF, $str) . Lexeme::CRLF;
 	}
 
 	/**
@@ -169,7 +169,7 @@ class Renderer
 			// Verb only
 		}
 
-		return implode(' ', $str) . self::CRLF;
+		return implode(' ', $str) . Lexeme::CRLF;
 	}
 
 	/**
@@ -223,9 +223,9 @@ class Renderer
 
 	public function renderOrigin(Origin $origin): string
 	{
-		if ($origin instanceof OriginDomain) {
+		if ($origin instanceof Domain) {
 			return $this->stringifyDomain($origin->domain);
-		} elseif ($origin instanceof OriginAddressLiteral) {
+		} elseif ($origin instanceof AddressLiteral) {
 			return '[' . $origin->address . ']';
 		} else {
 			throw new InvalidArgumentException(

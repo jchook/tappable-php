@@ -19,9 +19,9 @@ use Tap\Smtp\Element\Command\Unknown;
 use Tap\Smtp\Element\Command\Vrfy;
 use Tap\Smtp\Element\ForwardPath;
 use Tap\Smtp\Element\Mailbox;
-use Tap\Smtp\Element\Origin;
-use Tap\Smtp\Element\OriginDomain;
-use Tap\Smtp\Element\OriginAddressLiteral;
+use Tap\Smtp\Element\Origin\Origin;
+use Tap\Smtp\Element\Origin\Domain;
+use Tap\Smtp\Element\Origin\AddressLiteral;
 use Tap\Smtp\Element\Param;
 use Tap\Smtp\Element\Reply\Code;
 use Tap\Smtp\Element\Reply\ReplyLine;
@@ -72,7 +72,7 @@ class Parser
 		// Commands with a single string
 		switch ($verb) {
 		case 'HELO':
-			$origin = new OriginDomain($words[1]);
+			$origin = new Domain($words[1]);
 			return new Helo($origin);
 
 		case 'EHLO':
@@ -128,9 +128,9 @@ class Parser
 	private function parseOrigin(string $origin): Origin
 	{
 		if (substr($origin, 0, 1) === '[') {
-			return new OriginAddressLiteral(trim($origin, '[]'));
+			return new AddressLiteral(trim($origin, '[]'));
 		}
-		return new OriginDomain($origin);
+		return new Domain($origin);
 	}
 
 	/**

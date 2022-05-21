@@ -2,7 +2,7 @@
 
 namespace Tap\Smtp\Element\Reply;
 
-use Tap\Smtp\Element\Origin;
+use Tap\Smtp\Element\Origin\Origin;
 
 /**
  *

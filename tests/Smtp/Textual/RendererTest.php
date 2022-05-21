@@ -19,9 +19,9 @@ use Tap\Smtp\Element\Command\Unknown;
 use Tap\Smtp\Element\Command\Vrfy;
 use Tap\Smtp\Element\ForwardPath;
 use Tap\Smtp\Element\Mailbox;
-use Tap\Smtp\Element\Origin;
-use Tap\Smtp\Element\OriginAddressLiteral;
-use Tap\Smtp\Element\OriginDomain;
+use Tap\Smtp\Element\Origin\Origin;
+use Tap\Smtp\Element\Origin\AddressLiteral;
+use Tap\Smtp\Element\Origin\Domain;
 use Tap\Smtp\Element\Param;
 use Tap\Smtp\Element\Path;
 use Tap\Smtp\Element\Reply\Code;
@@ -29,16 +29,17 @@ use Tap\Smtp\Element\Reply\GenericReply;
 use Tap\Smtp\Element\Reply\Greeting;
 use Tap\Smtp\Element\Reply\Reply;
 use Tap\Smtp\Element\ReversePath;
+use Tap\Smtp\Textual\Lexeme;
 use Tap\Smtp\Textual\Renderer;
 
 class RendererTest extends TestCase
 {
-  public function testRenderOriginAddressLiteral()
+  public function testRenderAddressLiteral()
   {
     $ip4 ='127.0.0.1';
     $ip6 = 'ff00::1';
-    $o4 = new OriginAddressLiteral($ip4);
-    $o6 = new OriginAddressLiteral($ip6);
+    $o4 = new AddressLiteral($ip4);
+    $o6 = new AddressLiteral($ip6);
     $renderer = new Renderer(smtputf8: true);
     $this->assertSame(
       "[$ip4]",
@@ -50,13 +51,13 @@ class RendererTest extends TestCase
     );
   }
 
-  public function testRenderOriginDomain()
+  public function testRenderDomain()
   {
     $domainA = 'regular.domain';
     $domainU = '🦆.ducks.gov';
     $domainUA = idn_to_ascii($domainU);
-    $oA = new OriginDomain($domainA);
-    $oU = new OriginDomain($domainU);
+    $oA = new Domain($domainA);
+    $oU = new Domain($domainU);
     $rA = new Renderer(smtputf8: false);
     $rU = new Renderer(smtputf8: true);
     $this->assertSame(
@@ -77,10 +78,10 @@ class RendererTest extends TestCase
   public function testRenderHelo()
   {
     $ip ='127.0.0.1';
-    $ipOrigin = new OriginAddressLiteral($ip);
+    $ipOrigin = new AddressLiteral($ip);
     $domain ='🦆.ducks.gov';
     $domainAscii = idn_to_ascii($domain);
-    $domainOrigin = new OriginDomain($domain);
+    $domainOrigin = new Domain($domain);
     $helo = new Helo($domainOrigin);
     $ehlo = new Ehlo($ipOrigin);
     $renderer = new Renderer(smtputf8: false);
@@ -111,7 +112,7 @@ class RendererTest extends TestCase
     $domainA = idn_to_ascii($domain);
     $path = "<\"{$localPart}\"@{$domain}>";
     $pathA = "<\"{$localPart}\"@{$domainA}>";
-    $origin = new OriginDomain($domain);
+    $origin = new Domain($domain);
     $mailbox = new Mailbox($localPart, $origin);
     $mailFrom = new MailFrom(new ReversePath($mailbox));
     $rcptTo = new RcptTo(new ForwardPath($mailbox));
@@ -158,7 +159,7 @@ class RendererTest extends TestCase
   {
     $renderer = new Renderer(smtputf8: false);
     $mailFrom = new MailFrom(new ReversePath(
-      new Mailbox('normal', new OriginDomain('mailbox.com'))
+      new Mailbox('normal', new Domain('mailbox.com'))
     ));
     $this->assertSame(
       'MAIL FROM:<normal@mailbox.com>' . Lexeme::CRLF,
@@ -249,7 +250,7 @@ class RendererTest extends TestCase
   public function testRenderReply()
   {
     $domain = 'normal.domain';
-    $origin = new OriginDomain($domain);
+    $origin = new Domain($domain);
     $messages = [];
     $greeting = new Greeting($origin, $messages);
     $r = new Renderer();

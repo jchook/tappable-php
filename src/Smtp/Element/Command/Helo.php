@@ -2,7 +2,7 @@
 
 namespace Tap\Smtp\Element\Command;
 
-use Tap\Smtp\Element\OriginDomain;
+use Tap\Smtp\Element\Origin\Domain;
 
 /**
  * RFC 5321 § 4.1.1.1
@@ -14,7 +14,7 @@ class Helo extends CommandBase
 {
 	public string $verb = 'HELO';
 	public function __construct(
-		public OriginDomain $origin
+		public Domain $origin
 	)
 	{
 	}

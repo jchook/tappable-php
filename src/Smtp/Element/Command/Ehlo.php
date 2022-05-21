@@ -2,7 +2,7 @@
 
 namespace Tap\Smtp\Element\Command;
 
-use Tap\Smtp\Element\Origin;
+use Tap\Smtp\Element\Origin\Origin;
 
 /**
  * 4.1.1.1.  Extended HELLO (EHLO) or HELLO (HELO)

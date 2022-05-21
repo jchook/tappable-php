@@ -2,6 +2,8 @@
 
 namespace Tap\Smtp\Element;
 
+use Tap\Smtp\Element\Origin\Origin;
+
 class Mailbox
 {
 	public function __construct(

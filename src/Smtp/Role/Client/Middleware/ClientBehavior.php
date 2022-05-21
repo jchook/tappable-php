@@ -4,7 +4,7 @@ namespace Tap\Smtp\Role\Client\Middleware;
 
 use Tap\ReflectiveTap;
 use Tap\Smtp\Element\Command\Ehlo;
-use Tap\Smtp\Element\Origin;
+use Tap\Smtp\Element\Origin\Origin;
 use Tap\Smtp\Role\Client\Action\NewTransaction;
 use Tap\Smtp\Role\Client\Action\ReceiveCommandReply;
 use Tap\Smtp\Role\Client\Action\ReceiveGreeting;

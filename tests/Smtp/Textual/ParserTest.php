@@ -21,9 +21,9 @@ use Tap\Smtp\Element\Command\Unknown;
 use Tap\Smtp\Element\Command\Vrfy;
 use Tap\Smtp\Element\ForwardPath;
 use Tap\Smtp\Element\Mailbox;
-use Tap\Smtp\Element\Origin;
-use Tap\Smtp\Element\OriginAddressLiteral;
-use Tap\Smtp\Element\OriginDomain;
+use Tap\Smtp\Element\Origin\Origin;
+use Tap\Smtp\Element\Origin\AddressLiteral;
+use Tap\Smtp\Element\Origin\Domain;
 use Tap\Smtp\Element\Param;
 use Tap\Smtp\Element\Path;
 use Tap\Smtp\Element\Reply\Code;
@@ -87,7 +87,7 @@ class ParserTest extends TestCase
   {
     $parser = new Parser();
     $this->assertEquals(
-      new MailFrom(new ReversePath(new Mailbox('hank', new OriginDomain('propane.com')))),
+      new MailFrom(new ReversePath(new Mailbox('hank', new Domain('propane.com')))),
       $parser->parseCommand('MAIL FROM:<@a,@b:hank@propane.com>'),
     );
   }
@@ -119,21 +119,21 @@ class ParserTest extends TestCase
   {
     return [
       [new Data()],
-      [new Ehlo(new OriginDomain('🐢.com'))],
-      [new Ehlo(new OriginAddressLiteral('127.0.0.1'))],
+      [new Ehlo(new Domain('🐢.com'))],
+      [new Ehlo(new AddressLiteral('127.0.0.1'))],
       [new EndOfData()],
       [new Expn('🐢turtle@🐢turtle.com')],
-      [new Helo(new OriginDomain('🐢.com'))],
+      [new Helo(new Domain('🐢.com'))],
       [new Help()],
       [new Help('thing')],
       [new MailFrom(new ReversePath(null))],
       [new MailFrom(new ReversePath(null), [new Param('PARAM1'), new Param('PARAM2', 'MU🍄SH')])],
-      [new MailFrom(new ReversePath(new Mailbox('🤠', new OriginDomain('🐢.com'))))],
+      [new MailFrom(new ReversePath(new Mailbox('🤠', new Domain('🐢.com'))))],
       [new Noop()],
       [new Noop('🚧 test 🚧')],
       [new Quit()],
-      [new RcptTo(new ForwardPath(new Mailbox('🤠', new OriginDomain('🐢.com'))))],
-      [new RcptTo(new ForwardPath(new Mailbox('normal', new OriginDomain('dot.com'))))],
+      [new RcptTo(new ForwardPath(new Mailbox('🤠', new Domain('🐢.com'))))],
+      [new RcptTo(new ForwardPath(new Mailbox('normal', new Domain('dot.com'))))],
       [new Rset()],
       [new Unknown('UNKN', '🐢 I like turtles 🐢')],
       [new Unknown('UNKN')],

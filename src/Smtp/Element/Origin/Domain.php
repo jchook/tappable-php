@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace Tap\Smtp\Element;
+namespace Tap\Smtp\Element\Origin;
 
-class OriginDomain implements Origin
+class Domain implements Origin
 {
   public function __construct(
     public string $domain
