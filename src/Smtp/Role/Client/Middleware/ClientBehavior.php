@@ -18,45 +18,45 @@ class ClientBehavior extends ReflectiveTap
 
   public function __construct(
     public Origin $origin,
-    public Session $txn = new Session(self::DEFAULT_TRANSACTION_ID),
+    public Session $session = new Session(self::DEFAULT_TRANSACTION_ID),
   )
   {
   }
 
-  protected function handleGreeting(ReceiveGreeting $action): void
+  protected function receiveGreeting(ReceiveGreeting $action): void
   {
     $this->next($action);
+    $this->session->receiveReply($action->greeting);
     $this->dispatch(
       new SendCommand(
-        $this->txn,
         new Ehlo($this->origin)
       )
     );
   }
 
-  public function handleNewSession(NewSession $action): void
+  protected function newSession(NewSession $action): void
   {
-    $this->txn = $action->txn;
+    $this->session = $action->session;
     $this->next($action);
   }
 
-  public function handleReply(ReceiveCommandReply $action): void
+  protected function receiveCommandReply(ReceiveCommandReply $action): void
   {
-    $this->txn->receiveReply($action->reply);
     $this->next($action);
+    $this->session->receiveReply($action->reply);
   }
 
-  public function handleCommand(SendCommand $action): void
+  protected function sendCommand(SendCommand $action): void
   {
     //
-    if (!$this->txn->getState()->greeting) {
+    if (!$this->session->getState()->greeting) {
       throw new ClientSpokeTooEarly(
         'Protocol error: client attempted to send a ' .
         $action->command->getVerb() . ' command before receiving server greeting.'
       );
     }
-    $this->txn->receiveCommand($action->command);
     $this->next($action);
+    $this->session->receiveCommand($action->command);
   }
 }
 

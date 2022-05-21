@@ -8,7 +8,7 @@ use Tap\Smtp\Support\Session;
 class SendMail extends ClientAction
 {
   public function __construct(
-    public Session $txn,
+    public Session $session,
     public ReversePath $reversePath,
     public array $forwardPaths,
     public $dataStream,

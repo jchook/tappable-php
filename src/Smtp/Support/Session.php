@@ -46,7 +46,7 @@ class Session
 	 */
 	protected array $transcript = [];
 
-	protected SessionState $state;
+	public SessionState $state;
 
 	public function __construct(
 		public string $id,

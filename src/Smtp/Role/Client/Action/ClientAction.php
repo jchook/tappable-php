@@ -8,7 +8,7 @@ use Tap\Smtp\Support\Session;
 class ClientAction extends ActionBase
 {
   public function __construct(
-    public Session $txn,
+    public Session $session,
   )
   {
   }
