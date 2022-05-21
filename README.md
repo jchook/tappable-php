@@ -9,18 +9,17 @@ similar to redux, express, haraka, etc.
 
 ## Concepts
 
-A `Tappable` app can accept arbitrary plugins.
+A `Tappable` app has _plugins_.
 
-An `Action` is the common interface between its plugins.
+Plugins communicate via _actions_.
 
-Whenever a `Tappable` app dispatches an `Action`, it passes sequentially through
-each registered plugin. Plugins can respond to any action of the application or
-other plugins, store internal state, expose methods, dispatch new or custom
-actions, or throw errors.
+Every action passes through each plugin, sequentially.
 
-Each plugin wraps the next plugin in the chain, allowing plugins to modify
-actions before forwarding them down the chain, perform "before" and "after"
-business logic, wrap other plugins with try/catch, cancel actions, etc.
+Plugins can dispatch new actions, handle actions, keep state, or throw errors.
+
+Each plugin wraps the next plugin in the chain. Plugins can perform "before" and
+"after" business logic, wrap next() calls with try/catch, modify actions, cancel
+actions, etc.
 
 This design enables plugin authors to write modular functionality with
 versatile, statically-typed interoperability and powerful control flow.
