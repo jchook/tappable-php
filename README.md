@@ -17,8 +17,8 @@ Every action passes through each plugin, sequentially.
 
 Plugins can dispatch new actions, handle actions, keep state, or throw errors.
 
-Each plugin wraps the next plugin in the chain. Plugins can perform "before" and
-"after" business logic, wrap next() calls with try/catch, modify actions, cancel
+Each plugin wraps the next plugin. Plugins can wrap next() calls to perform
+"before" and "after" business logic, try/catch logic, modify actions, cancel
 actions, etc.
 
 This design enables plugin authors to write modular functionality with
