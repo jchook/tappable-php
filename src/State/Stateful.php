@@ -5,7 +5,7 @@ namespace Tap\State;
 use Tap\Action;
 use Tap\TapBase;
 
-class Stateful implements TapBase
+class Stateful extends TapBase
 {
   public function __construct(
     protected callable $reducer,
