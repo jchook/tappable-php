@@ -39,12 +39,14 @@ class Transaction
 	/**
 	 * @var Command[]
 	 */
-	protected $commandQueue = [];
+	protected array $commandQueue = [];
 
 	/**
 	 * @var CommandReplyPair[]
 	 */
 	protected array $transcript = [];
+
+	protected TransactionState $state;
 
 	public function __construct(
 		public string $id,

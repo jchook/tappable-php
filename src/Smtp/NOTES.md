@@ -1,6 +1,27 @@
 This is a line-based parser so far. Let it be known!
 
 
+---
+
+## Transactions
+
+Unsure whether to allow client and server to manage multiple transactions at a
+time.
+
+On the one hand I like the simplicity of only maintaining a single transaction
+per agent instance. That dramatically simplifies things and means we do not
+need to pass the transaction around everywhere or worry about tons of stale
+transaction data getting lost in middleware instance state.
+
+In the single transaction scenario, a concurrent agent would need to manage
+instances/factories of the non-concurrent agents, one per transaction, and could
+flush the entire client instance and all of its middleware whenever a transaction
+completes, or perhaps maintain 10 or so of them and reuse them.
+
+Yeah I kinda like that best. It keeps the middleware from needing to manage
+multiple transactions.
+
+
 4.5.1.  Minimum Implementation
 
    In order to make SMTP workable, the following minimum implementation

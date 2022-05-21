@@ -149,7 +149,7 @@ class RendererTest extends TestCase
         'PARAM1',
         'PARAM2=VALUE2',
         'PARAM3=+F0+9F+8C+B5cactus+F0+9F+8C+B5cactus+F0+9F+8C+B5cactus+F0+9F+8C+B5'
-      ]) . Renderer::CRLF,
+      ]) . Lexeme::CRLF,
       $renderer->renderCommand($mailFrom)
     );
   }
@@ -161,7 +161,7 @@ class RendererTest extends TestCase
       new Mailbox('normal', new OriginDomain('mailbox.com'))
     ));
     $this->assertSame(
-      'MAIL FROM:<normal@mailbox.com>' . Renderer::CRLF,
+      'MAIL FROM:<normal@mailbox.com>' . Lexeme::CRLF,
       $renderer->renderCommand($mailFrom)
     );
   }
@@ -260,7 +260,7 @@ class RendererTest extends TestCase
     $messages = ['first message', 'second message', '🌵 message'];
     $greeting = new Greeting($origin, $messages);
     $this->assertSame(
-      implode(Renderer::CRLF, [
+      implode(Lexeme::CRLF, [
         '220-' . $domain . ' first message',
         '220-second message',
         '220 🌵 message',
@@ -274,7 +274,7 @@ class RendererTest extends TestCase
       '🌵 message',
     ]);
     $this->assertSame(
-      implode(Renderer::CRLF, [
+      implode(Lexeme::CRLF, [
         '510-first message',
         '510-second message',
         '510 🌵 message',

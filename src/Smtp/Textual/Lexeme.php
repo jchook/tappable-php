@@ -4,6 +4,7 @@ namespace Tap\Smtp\Textual;
 
 class Lexeme
 {
+	const CRLF = "\r\n";
 
 	/**
 	 * RFC 5321 § 4.1.2

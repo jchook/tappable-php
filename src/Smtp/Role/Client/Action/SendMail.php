@@ -2,15 +2,16 @@
 
 namespace Tap\Smtp\Role\Client\Action;
 
-use Tap\ActionBase;
-use Tap\Smtp\Element\Reply\Reply;
+use Tap\Smtp\Element\ReversePath;
 use Tap\Smtp\Support\Transaction;
 
-class ReceiveReply extends ActionBase
+class SendMail extends ClientAction
 {
   public function __construct(
     public Transaction $txn,
-    public Reply $command
+    public ReversePath $reversePath,
+    public array $forwardPaths,
+    public $dataStream,
   )
   {
   }

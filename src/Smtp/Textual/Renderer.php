@@ -29,8 +29,6 @@ use Tap\Smtp\Element\ReversePath;
 
 class Renderer
 {
-	const CRLF = "\r\n";
-
 	public function __construct(
 		public bool $smtputf8 = false,
 	)
