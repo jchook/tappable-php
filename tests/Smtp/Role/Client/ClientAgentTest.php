@@ -48,7 +48,7 @@ class ClientAgentTest extends TestCase
 		$client->dispatch(new ReceiveGreeting($greeting));
 		$this->assertEquals(
 			$greeting,
-			$client->smtp->session->state->greeting,
+			$client->smtp->session->greeting,
 			'Greeting was stored in session state',
 		);
 
@@ -56,7 +56,7 @@ class ClientAgentTest extends TestCase
 		$ehlo = new Ehlo($client->origin);
 		$client->dispatch(new SendCommand($ehlo));
 		$this->assertEmpty(
-			$client->smtp->session->state->ehlo,
+			$client->smtp->session->ehlo,
 			'Session state should not accept EHLO until a successful reply'
 		);
 		$client->dispatch(new ReceiveCommandReply(
@@ -65,7 +65,7 @@ class ClientAgentTest extends TestCase
 		));
 		$this->assertEquals(
 			$ehlo,
-			$client->smtp->session->state->ehlo,
+			$client->smtp->session->ehlo,
 			'Successful reply registered EHLO into session state'
 		);
 
@@ -76,7 +76,7 @@ class ClientAgentTest extends TestCase
 		$forwardPaths = [new ForwardPath($tos[0])];
 		$mailFrom = new MailFrom($reversePath, $forwardPaths);
 		$client->dispatch(new SendCommand($mailFrom));
-		$this->assertEmpty($client->smtp->session->state->mailFrom);
+		$this->assertEmpty($client->smtp->session->mailFrom);
 		$client->dispatch(new ReceiveCommandReply(
 			$mailFrom,
 			new GenericReply(new Code('220'), ['Ok'])
@@ -84,7 +84,7 @@ class ClientAgentTest extends TestCase
 		// TODO: This should all be a SessionState test
 		// $this->assertEquals(
 		// 	$mailFrom,
-		// 	$client->smtp->session->state->mailFrom,
+		// 	$client->smtp->session->mailFrom,
 		// );
   }
 }

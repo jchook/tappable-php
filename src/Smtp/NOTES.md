@@ -1,7 +1,39 @@
-This is a line-based parser so far. Let it be known!
+## Public Properties
+
+ONLY the "pure data" namespaces like `Element` and `Action` may have `public`
+properties. That's it. Everything else MUST expose properties with methods.
+
+Unfortunately `interface` in PHP cannot expose properties. Why? I dunno! So a
+pure data namespace may also expose getters and setters as needed, however they
+MUST NOT do any logic other than getting or setting.
+
+How do you know if a namespace is pure data? The data model is dumb on purpose
+and does NO logic except assign defaults. Just Data™, except Just Typed Data™.
 
 
----
+## Namespaces
+
+Every time you see like `Session`, `SessionState`, `SessionTranscript`, etc,
+it's probably better to subnamespace it. Why not?
+
+It's a real pain to move it later, so just put it there now.
+
+
+## Public Arrays
+
+Every time you want to expose an array (public or protected), it MUST be
+0-indexed, contiguous, and homogeneous. So-called "associative arrays" are not
+allowed. Use a class, trait, or interface instead.
+
+Recent benchmarks show that class instances have better performance than
+associative arrays, especially when in a (large) array.
+
+
+## Binary data
+
+This is a line-based parser so far. Let it be known! Support binary data with
+Taps.
+
 
 ## Sessions
 
@@ -21,6 +53,8 @@ completes, or perhaps maintain 10 or so of them and reuse them.
 Yeah I kinda like that best. It keeps the middleware from needing to manage
 multiple transactions.
 
+
+## Minimum Implementation
 
 4.5.1.  Minimum Implementation
 

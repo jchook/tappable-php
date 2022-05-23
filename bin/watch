@@ -2,6 +2,7 @@
 if [ $# -eq 0 ]; then
   set -- 'bin/tests'
 fi
+"$@"
 echo "Will run the following command whenenver PHP files change:"
 echo "$*"
 inotifywait -q \

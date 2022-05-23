@@ -4,7 +4,9 @@ namespace Tap\Smtp\Role\Client;
 
 use Tap\Smtp\Element\Origin\Origin;
 use Tap\Smtp\Role\Agent\Agent;
+use Tap\Smtp\Role\Client\Action\SendMail;
 use Tap\Smtp\Role\Client\Middleware\ClientBehavior;
+use Tap\Smtp\Support\Session;
 use Tap\Smtp\Support\System;
 
 class ClientAgent extends Agent
@@ -15,13 +17,25 @@ class ClientAgent extends Agent
   public function __construct(
     ?Origin $origin = null,
     ?ClientBehavior $smtp = null,
+    ...$userTaps,
   )
   {
     $this->origin = $origin ?? System::getHostDomain();
     $this->smtp = $smtp ?? new ClientBehavior($this->origin);
     $this->tap(
       $this->smtp,
+      ...$userTaps,
     );
+  }
+
+  public function getSession(): Session
+  {
+    return $this->smtp->session;
+  }
+
+  public function sendMail(SendMail $sendMail): void
+  {
+    $this->dispatch($sendMail);
   }
 }
 
