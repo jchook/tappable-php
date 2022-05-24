@@ -8,6 +8,7 @@ use Tap\Smtp\Element\Command\Ehlo;
 use Tap\Smtp\Element\Command\MailFrom;
 use Tap\Smtp\Element\Command\RcptTo;
 use Tap\Smtp\Element\Origin\Origin;
+use Tap\Smtp\Element\Reply\Greeting;
 use Tap\Smtp\Role\Client\Action\NewSession;
 use Tap\Smtp\Role\Client\Action\ReceiveCommandReply;
 use Tap\Smtp\Role\Client\Action\ReceiveGreeting;
@@ -49,14 +50,22 @@ class ClientBehavior extends ReflectiveTap
   protected function receiveCommandReply(ReceiveCommandReply $action): void
   {
     $this->next($action);
+    $reply = $action->reply;
 
     // Receive the reply into the session state
-    $this->session->receiveReply($action->reply);
+    $this->session->receiveReply($reply);
+
+    // Respond to greeting with a EHLO
+    if ($reply instanceof Greeting && $reply->code->isPositive()) {
+      $this->dispatch(new SendCommand(
+        new Ehlo($this->origin)
+      ));
+    }
 
     // Are we in the process of sending mail in an automated fashion?
     // Was the reply successful?
     // Okay, then update state and send the next command!
-    if ($this->session->sendMail && $action->reply->getCode()->isPositive()) {
+    if ($this->session->sendMail && $reply->getCode()->isPositive()) {
       if ($action->command instanceof MailFrom) {
         foreach ($this->session->rcptTos as $rcptTo) {
           $this->dispatch(new SendCommand(

@@ -24,6 +24,8 @@ use Tap\Smtp\Element\Origin\Domain;
 use Tap\Smtp\Element\Origin\AddressLiteral;
 use Tap\Smtp\Element\Param;
 use Tap\Smtp\Element\Reply\Code;
+use Tap\Smtp\Element\Reply\GenericReply;
+use Tap\Smtp\Element\Reply\Reply;
 use Tap\Smtp\Element\Reply\ReplyLine;
 use Tap\Smtp\Element\ReversePath;
 use Tap\Smtp\Textual\Exception\IncompleteReply;
@@ -209,9 +211,20 @@ class Parser
 		return $replyGroups;
 	}
 
-	protected function parseReply(array $replyLines): Reply
+	/**
+	 * @param ReplyLine[] $replyLines
+	 */
+	public function parseGenericReply(array $replyLines): GenericReply
 	{
+		// Pop the last line as that's the RFC 821 line and most important.
+		$last = $replyLines[count($replyLines) - 1];
+		if (!$last || $last->continue) {
+			throw new IncompleteReply('Excepected Reply-line');
+		}
 
+		$code = $last->code;
+		$messages = array_map(fn(ReplyLine $x) => $x->message, $replyLines);
+		return new GenericReply($code, $messages);
 	}
 
 	/**
