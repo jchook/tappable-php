@@ -26,6 +26,8 @@ use Tap\Smtp\Element\Param;
 use Tap\Smtp\Element\Reply\Code;
 use Tap\Smtp\Element\Reply\ReplyLine;
 use Tap\Smtp\Element\ReversePath;
+use Tap\Smtp\Textual\Exception\IncompleteReply;
+use Tap\Smtp\Textual\Exception\TextualException;
 
 class Parser
 {
@@ -157,7 +159,11 @@ class Parser
 	{
 		// Grep the reply code and conintuation indicator
 		[$prefix, $codeStr, $continueStr] =
-			$this->expectRegex('/^([2-5][0-5][0-9])( |-)?/', $replyStr);
+			$this->expectRegex(
+				'/^([2-5][0-5][0-9])( |-)?/',
+				$replyStr,
+				'Expected Reply-line',
+			);
 
 		// Parse the code
 		$code = new Code($codeStr);
@@ -170,6 +176,42 @@ class Parser
 
 		//
 		return new ReplyLine($code, $message, $continue);
+	}
+
+	/**
+	 * This is a line-based parser (for the most part). To support PIPELINING and
+	 * multiline replies, this function will parse a group of replies all together
+	 * IFF they are all complete (non-partial) and syntactically correct.
+	 *
+	 * Otherwise an exception is thrown.
+	 *
+	 * @param ReplyLine[] $replyLines
+	 * @return ReplyLine[][]
+	 */
+	protected function groupReplyLines(array $replyLines): array
+	{
+		$replyGroups = [];
+		$replyGroup = [];
+		foreach ($replyLines as $line) {
+			$replyGroup[] = $line;
+			if ($line->continue) {
+				continue;
+			}
+			$replyGroups[] = $replyGroup;
+			$replyGroup = [];
+		}
+		if ($replyGroup) {
+			throw new IncompleteReply(
+				'Parsed ' . count($replyGroups) . ' replies, but the last one was' .
+				'incomplete.'
+			);
+		}
+		return $replyGroups;
+	}
+
+	protected function parseReply(array $replyLines): Reply
+	{
+
 	}
 
 	/**
@@ -259,10 +301,10 @@ class Parser
 		return $mailboxStr;
 	}
 
-	protected function syntaxError(string $message): \Throwable
+	protected function syntaxError(string $message): TextualException
 	{
 		// TODO beef this up
-		return new InvalidArgumentException('Syntax error: ' . $message);
+		return new TextualException('Syntax error: ' . $message);
 	}
 
 	public function parseMailbox(string $mailboxStr): Mailbox

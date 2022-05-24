@@ -63,6 +63,7 @@ class Session
 		public ?Greeting $greeting = null,
 		public ?Helo $helo = null,
 		public ?Ehlo $ehlo = null,
+		public ?EhloReply $ehloReply = null,
 		public ?SendMail $sendMail = null,
 		public ?MailFrom $mailFrom = null,
 		/**

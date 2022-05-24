@@ -2,7 +2,7 @@
 
 namespace Tap\Smtp\Exception;
 
-class SmtpException
+class SmtpException extends \Exception
 {
 }
 

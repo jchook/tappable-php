@@ -22,6 +22,8 @@ use Tap\Smtp\Element\Origin\Domain;
 use Tap\Smtp\Element\Origin\AddressLiteral;
 use Tap\Smtp\Element\Param;
 use Tap\Smtp\Element\Path;
+use Tap\Smtp\Element\Reply\EhloKeyword;
+use Tap\Smtp\Element\Reply\EhloReply;
 use Tap\Smtp\Element\Reply\GenericReply;
 use Tap\Smtp\Element\Reply\Greeting;
 use Tap\Smtp\Element\Reply\Reply;
@@ -104,6 +106,26 @@ class Renderer
 			);
 		}
 		return implode(Lexeme::CRLF, $str) . Lexeme::CRLF;
+	}
+
+	protected function renderEhloReply(EhloReply $reply): string
+	{
+		$messages = [$this->renderOrigin($reply->getDomain()) . ' ' . $reply->getMessage()];
+		foreach ($reply->getKeywords() as $keyword) {
+			$messages[] = $this->renderEhloKeyword($keyword);
+		}
+		return $this->renderGenericReply(
+			new GenericReply($reply->getCode(), $messages)
+		);
+	}
+
+	protected function renderEhloKeyword(EhloKeyword $keyword): string
+	{
+		$str = [$keyword->getName()];
+		foreach ($keyword->getParams() as $param) {
+			$str[] = '' . $param;
+		}
+		return implode(' ', $str);
 	}
 
 	/**

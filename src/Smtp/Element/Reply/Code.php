@@ -4,6 +4,12 @@ namespace Tap\Smtp\Element\Reply;
 
 /**
  *
+ * 4.2. SMTP Replies
+ *
+ *   In particular, the 220, 221, 251, 421, and 551 reply codes
+ *   are associated with message text that must be parsed and interpreted
+ *   by machines.
+ *
  * 4.2.1.  Reply Code Severities and Theory
  *
  *   The three digits of the reply each have a special significance.  The
