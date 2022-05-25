@@ -145,6 +145,15 @@ class Code
 	{
 		return $this->getSeverity() === '5';
 	}
-}
 
+	public static function ok(): static
+	{
+		return new static('250');
+	}
+
+	public static function ehloOk(): static
+	{
+		return new static('220');
+	}
+}
 

@@ -2,9 +2,8 @@
 
 namespace Tap\Smtp\Textual\Exception;
 
-class IncompleteReply extends TextualException
+class MultipleReplies extends TextualException
 {
 }
-
 
 

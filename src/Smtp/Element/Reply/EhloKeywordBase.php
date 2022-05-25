@@ -24,7 +24,7 @@ class EhloKeywordBase implements EhloKeyword
 		/**
 		 * @var EhloParam[]
 		 */
-		public array $params = null,
+		public array $params = [],
 	)
 	{
 	}

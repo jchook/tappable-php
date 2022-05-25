@@ -2,7 +2,6 @@
 
 namespace Tap\Smtp\Textual;
 
-use InvalidArgumentException;
 use Tap\Smtp\Element\Command\Command;
 use Tap\Smtp\Element\Command\Data;
 use Tap\Smtp\Element\Command\Ehlo;
@@ -28,6 +27,7 @@ use Tap\Smtp\Element\Reply\GenericReply;
 use Tap\Smtp\Element\Reply\Greeting;
 use Tap\Smtp\Element\Reply\Reply;
 use Tap\Smtp\Element\ReversePath;
+use Tap\Smtp\Textual\Exception\TextualException;
 
 class Renderer
 {
@@ -61,7 +61,10 @@ class Renderer
 		if ($reply instanceof GenericReply) {
 			return $this->renderGenericReply($reply);
 		}
-		throw new InvalidArgumentException(
+		if ($reply instanceof EhloReply) {
+			return $this->renderEhloReply($reply);
+		}
+		throw new TextualException(
 			'Unrecognized reply type: ' . get_class($reply)
 		);
 	}
@@ -238,7 +241,7 @@ class Renderer
 			return '<' . $this->stringifyLocalPart($path->mailbox->localPart) . '@' .
 				$this->renderOrigin($path->mailbox->origin) . '>';
 		}
-		throw new InvalidArgumentException(
+		throw new TextualException(
 			'Unrecognized Path type: ' . get_class($path)
 		);
 	}
@@ -250,7 +253,7 @@ class Renderer
 		} elseif ($origin instanceof AddressLiteral) {
 			return '[' . $origin->address . ']';
 		} else {
-			throw new InvalidArgumentException(
+			throw new TextualException(
 				'Unrecognized Origin type: ' . get_class($origin)
 			);
 		}

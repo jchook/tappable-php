@@ -2,7 +2,6 @@
 
 namespace Tap\Smtp\Test;
 
-use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use Tap\Smtp\Element\Command\Data;
@@ -25,10 +24,14 @@ use Tap\Smtp\Element\Origin\Domain;
 use Tap\Smtp\Element\Param;
 use Tap\Smtp\Element\Path;
 use Tap\Smtp\Element\Reply\Code;
+use Tap\Smtp\Element\Reply\EhloKeywordBase;
+use Tap\Smtp\Element\Reply\EhloParamBase;
+use Tap\Smtp\Element\Reply\EhloReply;
 use Tap\Smtp\Element\Reply\GenericReply;
 use Tap\Smtp\Element\Reply\Greeting;
 use Tap\Smtp\Element\Reply\Reply;
 use Tap\Smtp\Element\ReversePath;
+use Tap\Smtp\Textual\Exception\TextualException;
 use Tap\Smtp\Textual\Lexeme;
 use Tap\Smtp\Textual\Renderer;
 
@@ -169,7 +172,7 @@ class RendererTest extends TestCase
 
   public function testRenderForeignReply()
   {
-    $this->expectException(InvalidArgumentException::class);
+    $this->expectException(TextualException::class);
     $this->expectExceptionMessageMatches('/^Unrecognized/');
     $renderer = new Renderer();
     $renderer->renderReply(new MyForeignReply());
@@ -177,7 +180,7 @@ class RendererTest extends TestCase
 
   public function testRenderForeignOrigin()
   {
-    $this->expectException(InvalidArgumentException::class);
+    $this->expectException(TextualException::class);
     $this->expectExceptionMessageMatches('/^Unrecognized/');
     $renderer = new Renderer();
     $renderer->renderOrigin(new MyForeignOrigin());
@@ -185,7 +188,7 @@ class RendererTest extends TestCase
 
   public function testRenderForeignPath()
   {
-    $this->expectException(InvalidArgumentException::class);
+    $this->expectException(TextualException::class);
     $this->expectExceptionMessageMatches('/^Unrecognized/');
     $renderer = new Renderer();
     $renderer->renderPath(new MyForeignPath());
@@ -292,6 +295,34 @@ class RendererTest extends TestCase
     $this->assertSame(
       'MUSHROOM=THIS->+F0+9F+8D+84',
       $renderer->renderParam($param),
+    );
+  }
+
+  public function testRenderEhloReply()
+  {
+    $domain = 'normal.domain';
+    $origin = new Domain($domain);
+    $keywords = [
+      new EhloKeywordBase('KEYWORD', [
+        new EhloParamBase('SIZE=9001'),
+        new EhloParamBase('ID'),
+      ]),
+      new EhloKeywordBase('DUCK', [
+        new EhloParamBase('FLY=YES'),
+        new EhloParamBase('ID'),
+      ]),
+    ];
+    $greet = "Ello cap'n!";
+    $reply = new EhloReply(Code::ehloOk(), $origin, $greet, $keywords);
+    $renderer = new Renderer();
+    $this->assertSame(
+      implode("\r\n", [
+        "220-$domain $greet",
+        "220-KEYWORD SIZE=9001 ID",
+        "220 DUCK FLY=YES ID",
+        "",
+      ]),
+      $renderer->renderReply($reply),
     );
   }
 }

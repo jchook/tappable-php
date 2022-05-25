@@ -15,5 +15,5 @@ serve:
 tests *args="":
   bin/tests "$@"
 
-watch *args="":
+watch *args="bin/watch":
   bin/watch "$@"

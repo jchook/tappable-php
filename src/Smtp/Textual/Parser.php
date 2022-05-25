@@ -2,7 +2,6 @@
 
 namespace Tap\Smtp\Textual;
 
-use InvalidArgumentException;
 use Tap\Smtp\Element\Command\Command;
 use Tap\Smtp\Element\Command\Data;
 use Tap\Smtp\Element\Command\Ehlo;
@@ -24,6 +23,9 @@ use Tap\Smtp\Element\Origin\Domain;
 use Tap\Smtp\Element\Origin\AddressLiteral;
 use Tap\Smtp\Element\Param;
 use Tap\Smtp\Element\Reply\Code;
+use Tap\Smtp\Element\Reply\EhloKeyword;
+use Tap\Smtp\Element\Reply\EhloKeywordBase;
+use Tap\Smtp\Element\Reply\EhloParamBase;
 use Tap\Smtp\Element\Reply\EhloReply;
 use Tap\Smtp\Element\Reply\GenericReply;
 use Tap\Smtp\Element\Reply\Reply;
@@ -124,22 +126,31 @@ class Parser
 		$matches = [];
 		$result = preg_match($pattern, $subject, $matches);
 		if ($result === false || $result === 0) {
-			throw new InvalidArgumentException(
+			throw new TextualException(
 				'Syntax error: ' . ($errorMsg ?? 'unexpected characters encountered')
 			);
 		}
 		return $matches;
 	}
 
-	protected function expectCrlf(string $subject): void
+	// Thinking I will need to use this
+	// protected function expectCrlf(string $subject): void
+	// {
+	// 	// TODO: parser could be set-up more like MIME and give more helpful
+	// 	// error messages.
+	// 	if (substr($subject, -2) !== "\r\n") {
+	// 		throw new TextualException(
+	// 			'Missing CRLF'
+	// 		);
+	// 	}
+	// }
+
+	/**
+	 * Returns true if the reply line is not the final line of the reply.
+	 */
+	public static function isPartialReply(string $replyLine): bool
 	{
-		// TODO: parser could be set-up more like MIME and give more helpful
-		// error messages.
-		if (substr($subject, -2) !== "\r\n") {
-			throw new TextualException(
-				'Missing CRLF'
-			);
-		}
+		return ($replyLine[3] ?? null) === '-';
 	}
 
 	private function parseOrigin(string $origin): Origin
@@ -162,12 +173,11 @@ class Parser
 	 */
 	private function parseDomain(string $domain): Domain
 	{
-			// return ! preg_match('/[\x00-\x1F\x7F()<>@.,;:\\\\"\[\] ]/', $str);
 		$letDig = '[A-Z0-9\x80-\xFF]';
 		$letDigHyphen = '[A-Z0-9\x80-\xFF-]';
 		$subDomain ="$letDig(($letDigHyphen)*$letDig)?";
 		$this->expectRegex(
-			"$subDomain(\.$subDomain)*",
+			"/^$subDomain(\.$subDomain)*$/i",
 			$domain,
 			'Invalid domain: ' . $domain
 		);
@@ -218,6 +228,19 @@ class Parser
 	}
 
 	/**
+	 * @return ReplyLine[]
+	 */
+	public function parseReplyLines(string $lines): array
+	{
+		$lines = explode("\r\n", $lines);
+		$last = array_pop($lines);
+		if (!empty($last)) {
+			throw new TextualException('Received non-terminated reply line');
+		}
+		return array_map([$this, 'parseReplyLine'], $lines);
+	}
+
+	/**
 	 * This is a line-based parser (for the most part). To support PIPELINING and
 	 * multiline replies, this function will parse a group of replies all together
 	 * IFF they are all complete (non-partial) and syntactically correct.
@@ -249,22 +272,33 @@ class Parser
 	}
 
 	/**
+	 * @return Reply[]
+	 */
+	public function parseReplies(string $lines): array
+	{
+		$replyLineGroups = $this->groupReplyLines($this->parseReplyLines($lines));
+		return array_map([$this, 'parseReplyFromLines'], $replyLineGroups);
+	}
+
+	/**
 	 * @param ReplyLine[] $replyLines
 	 */
-	public function parseReply(array $replyLines): Reply
+	public function parseReply(string $lines): Reply
 	{
-		// Check the last line
-		$last = $replyLines[count($replyLines) - 1];
-		if (!$last || $last->continue) {
-			throw new IncompleteReply('Excepected Reply-line');
-		}
+		return $this->parseReplyFromLines($this->parseReplyLines($lines));
+	}
+
+	protected function parseReplyFromLines(array $replyLines): Reply
+	{
+		$this->validateOneReply($replyLines);
 
 		// Use the last line's code (RFC 821)
+		$last = $replyLines[count($replyLines) - 1];
 		$code = $last->code;
 
 		// Ehlo
 		if ($code->value === '220') {
-			return $this->parseEhloReply($replyLines);
+			return $this->parseEhloReplyFromLines($replyLines);
 		}
 
 		// Generic
@@ -295,24 +329,56 @@ class Parser
 	 *
 	 * @param ReplyLine[] $replyLines
 	 */
-	public function parseEhloReply(array $replyLines): EhloReply
+	public function parseEhloReply(string $lines): EhloReply
 	{
-		$this->validateOneReply($replyLines);
-		$first = array_shift($replyLines);
-		$parts = explode(' ', $first->message, 2);
-		$domain = $this->parseOrigin($parts[0]);
-
-
+		return $this->parseEhloReplyFromLines($this->parseReplyLines($lines));
 	}
 
-	 /**
-	  * @param ReplyLine[] $replyLines
-	  */
+	protected function parseEhloReplyFromLines(array $replyLines): EhloReply
+	{
+		$this->validateOneReply($replyLines);
+		$last = $replyLines[count($replyLines) - 1];
+		$code = $last->code;
+		$first = array_shift($replyLines);
+		$parts = explode(' ', $first->message, 2);
+		$domain = $this->parseDomain($parts[0]);
+		$greet = $parts[1] ?? null;
+		$keywords = [];
+		foreach ($replyLines as $replyLine) {
+			$keywords[] = $this->parseEhloKeyword($replyLine->message);
+		}
+		return new EhloReply($code, $domain, $greet, $keywords);
+	}
+
+	/**
+	 *   ehlo-keyword   = (ALPHA / DIGIT) *(ALPHA / DIGIT / "-")
+	 *                    ; additional syntax of ehlo-params depends on
+	 *                    ; ehlo-keyword
+	 *
+	 *   ehlo-param     = 1*(%d33-126)
+	 *                    ; any CHAR excluding <SP> and all
+	 *                    ; control characters (US-ASCII 0-31 and 127
+	 *                    ; inclusive)
+	 *
+	 * @param ReplyLine[] $replyLines
+	 */
+	protected function parseEhloKeyword(string $line): EhloKeyword
+	{
+		$parts = explode(' ', $line);
+		$name = array_shift($parts);
+		$params = array_map(fn($x) => new EhloParamBase($x), $parts);
+		return new EhloKeywordBase($name, $params);
+	}
+
+	/**
+	 * Validate that the array of reply lines contains only one reply.
+	 * @param ReplyLine[] $replyLines
+	 */
 	private function validateOneReply(array $replyLines): void
 	{
 		$last = array_pop($replyLines);
 		if (!$last || $last->continue) {
-			throw new IncompleteReply('Excepected Reply-line');
+			throw new IncompleteReply('Incomplete reply');
 		}
 		foreach ($replyLines as $replyLine) {
 			if (!$replyLine->continue) {
