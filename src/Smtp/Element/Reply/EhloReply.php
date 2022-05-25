@@ -5,6 +5,7 @@ namespace Tap\Smtp\Element\Reply;
 use Tap\Smtp\Element\Origin\Domain;
 
 /**
+ *
  * RFC 5321 § 4.1.1.1.  Extended HELLO (EHLO) or HELLO (HELO)
  *
  *   Normally, the response to EHLO will be a multiline reply.  Each line
@@ -43,15 +44,25 @@ use Tap\Smtp\Element\Origin\Domain;
  *   required) for all commands not listed as "required" in Section 4.5.1
  *   excepting only private-use commands as described in Section 4.1.5.
  *   Private-use commands MAY be listed.
+ *
  */
-interface EhloReply extends Reply
+class EhloReply implements Reply
 {
-	public function getDomain(): Domain;
-	public function getMessage(): string;
+	public function __construct(
+		public Code $code,
+		public Domain $domain,
+		public string $message,
+		/**
+		 * @var EhloKeyword[]
+		 */
+		public array $keywords,
+	)
+	{
+	}
 
-	/**
-	 * @return EhloKeyword[]
-	 */
-	public function getKeywords(): array;
+	public function getCode(): Code
+	{
+		return $this->code;
+	}
 }
 

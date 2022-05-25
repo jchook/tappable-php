@@ -24,6 +24,7 @@ use Tap\Smtp\Element\Origin\Domain;
 use Tap\Smtp\Element\Origin\AddressLiteral;
 use Tap\Smtp\Element\Param;
 use Tap\Smtp\Element\Reply\Code;
+use Tap\Smtp\Element\Reply\EhloReply;
 use Tap\Smtp\Element\Reply\GenericReply;
 use Tap\Smtp\Element\Reply\Reply;
 use Tap\Smtp\Element\Reply\ReplyLine;
@@ -129,6 +130,17 @@ class Parser
 		return $matches;
 	}
 
+	protected function expectCrlf(string $subject): void
+	{
+		// TODO: parser could be set-up more like MIME and give more helpful
+		// error messages.
+		if (substr($subject, -2) !== "\r\n") {
+			throw new TextualException(
+				'Missing CRLF'
+			);
+		}
+	}
+
 	private function parseOrigin(string $origin): Origin
 	{
 		if (substr($origin, 0, 1) === '[') {
@@ -214,17 +226,33 @@ class Parser
 	/**
 	 * @param ReplyLine[] $replyLines
 	 */
-	public function parseGenericReply(array $replyLines): GenericReply
+	public function parseReply(array $replyLines): Reply
 	{
-		// Pop the last line as that's the RFC 821 line and most important.
+		// Check the last line
 		$last = $replyLines[count($replyLines) - 1];
 		if (!$last || $last->continue) {
 			throw new IncompleteReply('Excepected Reply-line');
 		}
 
+		// Use the last line's code (RFC 821)
 		$code = $last->code;
+
+		// Ehlo
+		if ($code->value === '220') {
+			return $this->parseEhloReply($replyLines);
+		}
+
+		// Generic
 		$messages = array_map(fn(ReplyLine $x) => $x->message, $replyLines);
 		return new GenericReply($code, $messages);
+	}
+
+	/**
+	 * @param ReplyLine[] $replyLines
+	 */
+	public function parseEhloReply(array $replyLines): EhloReply
+	{
+
 	}
 
 	/**

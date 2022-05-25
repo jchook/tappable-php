@@ -110,8 +110,8 @@ class Renderer
 
 	protected function renderEhloReply(EhloReply $reply): string
 	{
-		$messages = [$this->renderOrigin($reply->getDomain()) . ' ' . $reply->getMessage()];
-		foreach ($reply->getKeywords() as $keyword) {
+		$messages = [$this->renderOrigin($reply->domain) . ' ' . $reply->message];
+		foreach ($reply->keywords as $keyword) {
 			$messages[] = $this->renderEhloKeyword($keyword);
 		}
 		return $this->renderGenericReply(
