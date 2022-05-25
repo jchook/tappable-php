@@ -30,6 +30,7 @@ use Tap\Smtp\Element\Reply\Reply;
 use Tap\Smtp\Element\Reply\ReplyLine;
 use Tap\Smtp\Element\ReversePath;
 use Tap\Smtp\Textual\Exception\IncompleteReply;
+use Tap\Smtp\Textual\Exception\MultipleReplies;
 use Tap\Smtp\Textual\Exception\TextualException;
 
 class Parser
@@ -146,7 +147,31 @@ class Parser
 		if (substr($origin, 0, 1) === '[') {
 			return new AddressLiteral(trim($origin, '[]'));
 		}
-		return new Domain($origin);
+		return $this->parseDomain($origin);
+	}
+
+	/**
+	 *   Domain         = sub-domain *("." sub-domain)
+	 *
+	 *   sub-domain     = Let-dig [Ldh-str]
+	 *
+	 *   Let-dig        = ALPHA / DIGIT
+	 *
+	 *   Ldh-str        = *( ALPHA / DIGIT / "-" ) Let-dig
+	 *
+	 */
+	private function parseDomain(string $domain): Domain
+	{
+			// return ! preg_match('/[\x00-\x1F\x7F()<>@.,;:\\\\"\[\] ]/', $str);
+		$letDig = '[A-Z0-9\x80-\xFF]';
+		$letDigHyphen = '[A-Z0-9\x80-\xFF-]';
+		$subDomain ="$letDig(($letDigHyphen)*$letDig)?";
+		$this->expectRegex(
+			"$subDomain(\.$subDomain)*",
+			$domain,
+			'Invalid domain: ' . $domain
+		);
+		return new Domain($domain);
 	}
 
 	/**
@@ -248,11 +273,52 @@ class Parser
 	}
 
 	/**
+	 *
+	 *   ehlo-ok-rsp    = ( "250" SP Domain [ SP ehlo-greet ] CRLF )
+	 *                    / ( "250-" Domain [ SP ehlo-greet ] CRLF
+	 *                    *( "250-" ehlo-line CRLF )
+	 *                    "250" SP ehlo-line CRLF )
+	 *
+	 *   ehlo-greet     = 1*(%d0-9 / %d11-12 / %d14-127)
+	 *                    ; string of any characters other than CR or LF
+	 *
+	 *   ehlo-line      = ehlo-keyword *( SP ehlo-param )
+	 *
+	 *   ehlo-keyword   = (ALPHA / DIGIT) *(ALPHA / DIGIT / "-")
+	 *                    ; additional syntax of ehlo-params depends on
+	 *                    ; ehlo-keyword
+	 *
+	 *   ehlo-param     = 1*(%d33-126)
+	 *                    ; any CHAR excluding <SP> and all
+	 *                    ; control characters (US-ASCII 0-31 and 127
+	 *                    ; inclusive)
+	 *
 	 * @param ReplyLine[] $replyLines
 	 */
 	public function parseEhloReply(array $replyLines): EhloReply
 	{
+		$this->validateOneReply($replyLines);
+		$first = array_shift($replyLines);
+		$parts = explode(' ', $first->message, 2);
+		$domain = $this->parseOrigin($parts[0]);
 
+
+	}
+
+	 /**
+	  * @param ReplyLine[] $replyLines
+	  */
+	private function validateOneReply(array $replyLines): void
+	{
+		$last = array_pop($replyLines);
+		if (!$last || $last->continue) {
+			throw new IncompleteReply('Excepected Reply-line');
+		}
+		foreach ($replyLines as $replyLine) {
+			if (!$replyLine->continue) {
+				throw new MultipleReplies('Expected one reply but found multiple');
+			}
+		}
 	}
 
 	/**
