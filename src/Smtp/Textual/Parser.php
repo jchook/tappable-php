@@ -28,6 +28,7 @@ use Tap\Smtp\Element\Reply\EhloKeywordBase;
 use Tap\Smtp\Element\Reply\EhloParamBase;
 use Tap\Smtp\Element\Reply\EhloReply;
 use Tap\Smtp\Element\Reply\GenericReply;
+use Tap\Smtp\Element\Reply\Greeting;
 use Tap\Smtp\Element\Reply\Reply;
 use Tap\Smtp\Element\Reply\ReplyLine;
 use Tap\Smtp\Element\ReversePath;
@@ -184,15 +185,55 @@ class Parser
 		return new Domain($domain);
 	}
 
+	public function parseGreetingOrReply(string $lines)
+	{
+		$lines = $this->parseReplyLines($lines);
+		try {
+			return $this->parseGreetingFromLines($lines);
+		} catch (TextualException) {
+			return $this->parseReplyFromLines($lines);
+		}
+	}
+
+	public function parseGreeting(string $lines): Greeting
+	{
+		return $this->parseGreetingFromLines($this->parseReplyLines($lines));
+	}
+
 	/**
-	 * RFC 5321 § 4.2
-	 *
 	 *  Greeting       = ( "220 " (Domain / address-literal)
  	 *                 [ SP textstring ] CRLF ) /
  	 *                 ( "220-" (Domain / address-literal)
  	 *                 [ SP textstring ] CRLF
  	 *                 *( "220-" [ textstring ] CRLF )
  	 *                 "220" [ SP textstring ] CRLF )
+	 *
+	 * @param ReplyLine[] $replyLines
+	 */
+	protected function parseGreetingFromLines(array $replyLines): Greeting
+	{
+		$this->validateOneReply($replyLines);
+		$last = $replyLines[count($replyLines) - 1];
+		$code = $last->code;
+		if ($code->value !== '220') {
+			throw new TextualException('Unexpected greeting code: ' . $code->value);
+		}
+		$first = array_shift($replyLines);
+		$parts = explode(' ', $first->message, 2);
+		$origin = $this->parseOrigin($parts[0]);
+		$messages = [];
+		if (isset($parts[1])) {
+			$messages[] = $parts[1];
+		}
+		foreach ($replyLines as $replyLine) {
+			$messages[] = $replyLine->message;
+		}
+		return new Greeting($origin, $messages);
+	}
+
+	/**
+	 * RFC 5321 § 4.2
+	 *
  	 *  textstring     = 1*(%d09 / %d32-126) ; HT, SP, Printable US-ASCII
  	 *  Reply-line     = *( Reply-code "-" [ textstring ] CRLF )
  	 *                 Reply-code [ SP textstring ] CRLF
@@ -280,14 +321,18 @@ class Parser
 		return array_map([$this, 'parseReplyFromLines'], $replyLineGroups);
 	}
 
-	/**
-	 * @param ReplyLine[] $replyLines
-	 */
 	public function parseReply(string $lines): Reply
 	{
 		return $this->parseReplyFromLines($this->parseReplyLines($lines));
 	}
 
+	/**
+	 *   In particular, the 220, 221, 251, 421, and 551 reply codes
+	 *   are associated with message text that must be parsed and interpreted
+	 *   by machines.
+	 *
+	 * @param ReplyLine[] $replyLines
+	 */
 	protected function parseReplyFromLines(array $replyLines): Reply
 	{
 		$this->validateOneReply($replyLines);

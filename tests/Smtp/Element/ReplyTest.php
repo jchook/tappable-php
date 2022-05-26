@@ -11,16 +11,19 @@ class ReplyTest extends TestCase
   public function testCode()
   {
     $codes = [
-      ['220', true, 0, 0],
-      ['421', 0, true, 0],
-      ['511', 0, 0, true],
+      ['220', 1, 0, 0, 0],
+      ['354', 0, 1, 0, 0],
+      ['421', 0, 0, 1, 0],
+      ['511', 0, 0, 0, 1],
     ];
-    foreach ($codes as [$value, $success, $tempFail, $permFail]) {
+    foreach ($codes as [$value, $compl, $inter, $trans, $perm]) {
       $code = new Code($value);
-      $this->assertEquals($success, $code->isPositive());
-      $this->assertEquals($tempFail, $code->isTransient());
-      $this->assertEquals($permFail, $code->isPermanant());
-      $this->assertEquals($permFail || $tempFail, $code->isNegative());
+      $this->assertEquals($compl, $code->isCompletion());
+      $this->assertEquals($inter, $code->isIntermediate());
+      $this->assertEquals($trans, $code->isTransient());
+      $this->assertEquals($perm, $code->isPermanant());
+      $this->assertEquals($perm || $trans, $code->isNegative());
+      $this->assertEquals($compl || $inter, $code->isPositive());
     }
   }
 

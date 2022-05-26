@@ -27,6 +27,7 @@ use Tap\Smtp\Element\Reply\EhloKeywordBase;
 use Tap\Smtp\Element\Reply\EhloParamBase;
 use Tap\Smtp\Element\Reply\EhloReply;
 use Tap\Smtp\Element\Reply\GenericReply;
+use Tap\Smtp\Element\Reply\Greeting;
 use Tap\Smtp\Element\Reply\Reply;
 use Tap\Smtp\Element\ReversePath;
 use Tap\Smtp\Textual\Exception\IncompleteReply;
@@ -142,6 +143,38 @@ class ParserTest extends TestCase
     $this->assertEquals(
       $param,
       $parser->parseParam('MUSHROOM=+F0+9F+8D+84'),
+    );
+  }
+
+  public function testParseGreetingOrReply()
+  {
+    $parser = new Parser();
+    $originStr = 'ducks.gov';
+    $origin = new Domain($originStr);
+    $messages = ['test one', 'test two'];
+    $greeting = new Greeting($origin, $messages);
+    $greetingStr = implode("\r\n", [
+      "220-$originStr {$messages[0]}",
+      "220 {$messages[1]}",
+      "",
+    ]);
+    $this->assertEquals(
+      $greeting,
+      $parser->parseGreetingOrReply($greetingStr),
+    );
+    $this->assertEquals(
+      $greeting,
+      $parser->parseGreeting($greetingStr),
+    );
+    $error = new GenericReply(new Code('554'), $messages);
+    $errorStr = implode("\r\n", [
+      "554-{$messages[0]}",
+      "554 {$messages[1]}",
+      "",
+    ]);
+    $this->assertEquals(
+      $error,
+      $parser->parseGreetingOrReply($errorStr),
     );
   }
 
