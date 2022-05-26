@@ -1,4 +1,23 @@
-## Public Properties
+Autocomplete
+------------
+
+Autocomplete is feedback. When code has good autocomplete, it means you
+organized things well.
+
+
+Tests
+-----
+
+One goal is:
+
+Have a predefined set of SMTP conversations in textual form and then force the
+system to parse, render, and interpret those conversations.
+
+Can test all kinds of situations with purely textual test cases.
+
+
+Public Properties
+-----------------
 
 ONLY the "pure data" namespaces like `Element` and `Action` may have `public`
 properties. That's it. Everything else MUST expose properties with methods.
@@ -11,7 +30,8 @@ How do you know if a namespace is pure data? The data model is dumb on purpose
 and does NO logic except assign defaults. Just Data™, except Just Typed Data™.
 
 
-## Namespaces
+Namespaces
+----------
 
 Every time you see like `Session`, `SessionState`, `SessionTranscript`, etc,
 it's probably better to subnamespace it. Why not?
@@ -19,7 +39,8 @@ it's probably better to subnamespace it. Why not?
 It's a real pain to move it later, so just put it there now.
 
 
-## Public Arrays
+Public Arrays
+-------------
 
 Every time you want to expose an array (public or protected), it MUST be
 0-indexed, contiguous, and homogeneous. So-called "associative arrays" are not
@@ -29,13 +50,15 @@ Recent benchmarks show that class instances have better performance than
 associative arrays, especially when in a (large) array.
 
 
-## Binary data
+Binary data
+-----------
 
 This is a line-based parser so far. Let it be known! Support binary data with
 Taps.
 
 
-## Sessions
+Sessions
+--------
 
 Unsure whether to allow client and server to manage multiple transactions at a
 time.
@@ -54,7 +77,8 @@ Yeah I kinda like that best. It keeps the middleware from needing to manage
 multiple transactions.
 
 
-## Minimum Implementation
+Minimum Implementation
+----------------------
 
 4.5.1.  Minimum Implementation
 

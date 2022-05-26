@@ -5,8 +5,6 @@ namespace Tap\Smtp\Test\Role\Client;
 use PHPUnit\Framework\TestCase;
 use Tap\Action;
 use Tap\Smtp\Element\Command\Ehlo;
-use Tap\Smtp\Element\Command\Helo;
-use Tap\Smtp\Element\Command\MailFrom;
 use Tap\Smtp\Element\ForwardPath;
 use Tap\Smtp\Element\Mailbox;
 use Tap\Smtp\Element\Origin\Domain;
@@ -15,11 +13,12 @@ use Tap\Smtp\Element\Reply\Code;
 use Tap\Smtp\Element\Reply\GenericReply;
 use Tap\Smtp\Element\Reply\Greeting;
 use Tap\Smtp\Element\ReversePath;
-use Tap\Smtp\Role\Client\Action\ReceiveCommandReply;
 use Tap\Smtp\Role\Client\Action\ReceiveGreeting;
+use Tap\Smtp\Role\Client\Action\ReceiveReply;
 use Tap\Smtp\Role\Client\Action\SendCommand;
+use Tap\Smtp\Role\Client\Action\SendMail;
 use Tap\Smtp\Role\Client\ClientAgent;
-use Tap\Smtp\Role\Client\Exception\ClientSpokeTooEarly;
+use Tap\Smtp\Textual\Renderer;
 use Tap\TapBase;
 
 class ClientAgentTest extends TestCase
@@ -31,61 +30,67 @@ class ClientAgentTest extends TestCase
 		);
 	}
 
-	public function testSpokeTooEarly()
+	public function replyOk(): ReceiveReply
 	{
-		$this->expectException(ClientSpokeTooEarly::class);
-    $client = new ClientAgent();
-		$client->dispatch(new SendCommand(new Helo(new Domain('tomato.org'))));
+		return new ReceiveReply(new GenericReply(Code::ok(), ['Ok']));
 	}
 
-  public function testBasicTransaction()
-  {
+	public function getClientReady(...$userTaps)
+	{
+    $client = new ClientAgent(null, null, ...$userTaps);
 		$server = $this->getServerDetails();
-    $client = new ClientAgent();
 
 		// Greeting
 		$greeting = new Greeting($server->origin);
 		$client->dispatch(new ReceiveGreeting($greeting));
-		$this->assertEquals(
-			$greeting,
-			$client->smtp->session->greeting,
-			'Greeting was stored in session state',
-		);
+		$this->assertNotEmpty($client->getSession()->greeting);
 
 		// Ehlo
-		$ehlo = new Ehlo($client->origin);
-		$client->dispatch(new SendCommand($ehlo));
-		$this->assertEmpty(
-			$client->smtp->session->ehlo,
-			'Session state should not accept EHLO until a successful reply'
-		);
-		$client->dispatch(new ReceiveCommandReply(
-			$ehlo,
-			new GenericReply(new Code('220'), ['Ok'])
-		));
-		$this->assertEquals(
-			$ehlo,
-			$client->smtp->session->ehlo,
-			'Successful reply registered EHLO into session state'
-		);
+		// TODO: Should the client automatically say ehlo? probably..
+		// but I think we want to separate the SessionAware behavior into a
+		// separate Tap
+		//
+		// $ehlo = new Ehlo($client->origin);
+		// $client->dispatch(new SendCommand($ehlo));
+		$client->dispatch($this->replyOk());
+		// $this->assertNotEmpty($client->getSession()->ehlo);
 
-		// MailFrom
-		$from = new Mailbox('harry', new Domain('dunne.name'));
-		$tos = [new Mailbox('lloyd', new Domain('christmas.name'))];
-		$reversePath = new ReversePath($from);
-		$forwardPaths = [new ForwardPath($tos[0])];
-		$mailFrom = new MailFrom($reversePath, $forwardPaths);
-		$client->dispatch(new SendCommand($mailFrom));
-		$this->assertEmpty($client->smtp->session->mailFrom);
-		$client->dispatch(new ReceiveCommandReply(
-			$mailFrom,
-			new GenericReply(new Code('220'), ['Ok'])
-		));
-		// TODO: This should all be a SessionState test
-		// $this->assertEquals(
-		// 	$mailFrom,
-		// 	$client->smtp->session->mailFrom,
-		// );
+		return $client;
+	}
+
+  public function testSendMail()
+  {
+		$inspect = new InspectorTap();
+		$client = $this->getClientReady($inspect);
+		$from = new ReversePath(new Mailbox('harry', new Domain('dunne.name')));
+		$tos = [
+			new ForwardPath(new Mailbox('lloyd', new Domain('christmas.name'))),
+			new ForwardPath(new Mailbox('mary', new Domain('swanson.name'))),
+		];
+		$data = 'test';
+		$client->dispatch(new SendMail($from, $tos, $data));
+
+		// MAIL FROM
+		$this->assertEmpty($client->getSession()->mailFrom);
+		$client->dispatch($this->replyOk());
+		$this->assertNotEmpty($client->getSession()->mailFrom);
+
+		// RCPT TO x2
+		$this->assertEmpty($client->getSession()->rcptTos);
+		$client->dispatch($this->replyOk());
+		$this->assertNotEmpty($client->getSession()->rcptTos);
+		$client->dispatch($this->replyOk());
+		$this->assertCount(2, $client->getSession()->rcptTos);
+
+		// DATA
+		$this->assertEmpty($client->getSession()->data);
+		$client->dispatch($this->replyOk());
+		$this->assertNotEmpty($client->getSession()->data);
+
+		// .
+		$this->assertEmpty($client->getSession()->endOfData);
+		$client->dispatch($this->replyOk());
+		$this->assertNotEmpty($client->getSession()->endOfData);
   }
 }
 
@@ -95,6 +100,21 @@ class InspectorTap extends TapBase {
 	{
 		$this->next($action);
 		$this->actions[] = $action;
+
+		echo $this->renderAction($action);
+	}
+
+	public function renderAction(Action $action)
+	{
+		$renderer = new Renderer(true);
+		$str = [];
+		if ($action instanceof SendCommand) {
+			$str[] = $renderer->renderCommand($action->command);
+		}
+		if ($action instanceof ReceiveReply) {
+			$str[] = $renderer->renderReply($action->reply);
+		}
+		return implode(' ', $str);
 	}
 }
 
@@ -105,3 +125,4 @@ class ServerDetails {
 	{
 	}
 }
+

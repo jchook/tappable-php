@@ -2,13 +2,9 @@
 
 namespace Tap\Smtp\Role\Client\Action;
 
-use Tap\Smtp\Element\ReversePath;
-
-class SendMail extends ClientAction
+class SendMailData extends ClientAction
 {
   public function __construct(
-    public ReversePath $reversePath,
-    public array $forwardPaths,
     /**
      * @var resource
      */
@@ -17,5 +13,4 @@ class SendMail extends ClientAction
   {
   }
 }
-
 

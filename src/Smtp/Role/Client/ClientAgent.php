@@ -22,6 +22,9 @@ class ClientAgent extends Agent
     ...$userTaps,
   )
   {
+    // TODO: maybe grab ClientBehavior wherever it appears in the userTaps
+    // and make one if it doesn't exist. This would allow folks to wrap it
+    // in other middleware.
     $this->origin = $origin ?? System::getHostDomain();
     $this->smtp = $smtp ?? new ClientBehavior($this->origin);
     $this->tap(
@@ -35,14 +38,16 @@ class ClientAgent extends Agent
     return $this->smtp->session;
   }
 
-  public function sendMail(SendMail $sendMail): void
+  public function sendMail(SendMail $sendMail): self
   {
     $this->dispatch($sendMail);
+    return $this;
   }
 
-  public function quit(Quit $quit = null): void
+  public function quit(Quit $quit = null): self
   {
     $this->dispatch(new SendCommand($quit ?? new Quit()));
+    return $this;
   }
 }
 

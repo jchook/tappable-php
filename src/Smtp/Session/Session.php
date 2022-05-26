@@ -76,6 +76,11 @@ class Session
 		return !empty($this->commandQueue);
 	}
 
+	public function getCurrentCommand(): ?Command
+	{
+		return reset($this->commandQueue) ?: null;
+	}
+
 	public function isEsmtp()
 	{
 		return (bool) $this->ehlo;
@@ -104,7 +109,10 @@ class Session
 		$this->greeting = $greeting;
 	}
 
-	public function receiveReply(Reply $reply): void
+	/**
+	 * Receive the reply into state and return the associated command
+	 */
+	public function receiveReply(Reply $reply): ?Command
 	{
 		$cmd = null;
 
@@ -171,6 +179,8 @@ class Session
 				$this->quit = $cmd;
 			}
 		}
+
+		return $cmd;
 	}
 }
 
