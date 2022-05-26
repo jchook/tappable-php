@@ -6,6 +6,12 @@ use Tap\TappableBase;
 
 class Agent extends TappableBase
 {
+  public function __construct(
+    ...$taps
+  )
+  {
+    $this->tap(...$taps);
+  }
 }
 
 

@@ -2,7 +2,7 @@
 
 namespace Tap;
 
-class ActionBase implements Action
+abstract class ActionBase implements Action
 {
   // Future-proof action base anyone can extend from
 }

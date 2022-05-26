@@ -1,10 +1,10 @@
 <?php declare(strict_types=1);
 
-namespace Tap\Smtp\Role\Client\Action;
+namespace Tap\Smtp\Role\Server\Action;
 
 use Tap\Smtp\Element\Reply\Greeting;
 
-class ReceiveGreeting extends ClientAction
+class SendGreeting extends ServerAction
 {
   public function __construct(
     public Greeting $greeting,

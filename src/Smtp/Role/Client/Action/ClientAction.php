@@ -3,16 +3,8 @@
 namespace Tap\Smtp\Role\Client\Action;
 
 use Tap\ActionBase;
-use Tap\Smtp\Support\Session;
 
-class ClientAction extends ActionBase
+abstract class ClientAction extends ActionBase
 {
-  public function __construct(
-    public Session $session,
-  )
-  {
-  }
 }
-
-
 

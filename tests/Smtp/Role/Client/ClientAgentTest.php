@@ -101,7 +101,8 @@ class InspectorTap extends TapBase {
 		$this->next($action);
 		$this->actions[] = $action;
 
-		echo $this->renderAction($action);
+		// Turn this on when you need to debug
+		// echo $this->renderAction($action);
 	}
 
 	public function renderAction(Action $action)

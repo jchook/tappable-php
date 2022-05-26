@@ -1,11 +1,10 @@
 <?php declare(strict_types=1);
 
-namespace Tap\Smtp\Role\Client\Action;
+namespace Tap\Smtp\Role\Server\Action;
 
-use Tap\ActionBase;
 use Tap\Smtp\Session\Session;
 
-class NewSession extends ClientAction
+class NewSession extends ServerAction
 {
   public function __construct(
     public Session $session,

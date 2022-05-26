@@ -57,6 +57,37 @@ This is a line-based parser so far. Let it be known! Support binary data with
 Taps.
 
 
+Pipelining
+----------
+
+There are two main ways to handle this:
+
+1. The Session and ClientBehavior etc will be pipelining-aware or
+2. The system is completely agnostic about it except for middleware
+
+Really, #2 seems cleaner and better. The trick is that we cannot dispatch
+all of our RCPT actions in rapid succession. Need to keep track of which ones
+we have dispatched so far and dispatch after each reply is received. Actually
+that precludes the ability to even *do* pipelining... since further RCPT actions
+will not be dispatched until the reply is made available.
+
+So some middleware will need to be careful about buffering successive commands
+or replies to non-pipelining-aware agents.
+
+Eventually we can support all of these via middleware...
+
+- PIPELINING
+- SIZE 10240000
+- VRFY
+- ETRN
+- STARTTLS
+- ENHANCEDSTATUSCODES
+- 8BITMIME
+- DSN
+- SMTPUTF8
+- CHUNKING
+
+
 Sessions
 --------
 
