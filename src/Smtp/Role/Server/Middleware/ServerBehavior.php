@@ -48,18 +48,6 @@ class ServerBehavior extends ReflectiveTap
     );
   }
 
-  protected function sendGreeting(SendGreeting $action): void
-  {
-    $this->next($action);
-    $this->session->receiveGreeting($action->greeting);
-  }
-
-  protected function sendCommandReply(SendCommandReply $action): void
-  {
-    $this->next($action);
-    $this->session->receiveReply($action->reply);
-  }
-
   /**
    * 4.5.1.  Minimum Implementation
    *
@@ -110,6 +98,18 @@ class ServerBehavior extends ReflectiveTap
     $this->dispatch(
       new SendCommandReply($command, $reply)
     );
+  }
+
+  protected function sendGreeting(SendGreeting $action): void
+  {
+    $this->next($action);
+    $this->session->receiveGreeting($action->greeting);
+  }
+
+  protected function sendCommandReply(SendCommandReply $action): void
+  {
+    $this->next($action);
+    $this->session->receiveReply($action->reply);
   }
 }
 

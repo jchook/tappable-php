@@ -2,10 +2,10 @@
 
 namespace Tap\Smtp\Role\Client\Action;
 
-use Tap\ActionBase;
+use Tap\Smtp\Role\Agent\Action\NewSession as AgentNewSession;
 use Tap\Smtp\Session\Session;
 
-class NewSession extends ClientAction
+class NewSession extends AgentNewSession
 {
   public function __construct(
     public Session $session,

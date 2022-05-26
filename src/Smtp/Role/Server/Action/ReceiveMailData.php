@@ -3,7 +3,7 @@
 namespace Tap\Smtp\Role\Server\Action;
 
 /**
- * TODO:
+ * TODO: Separate actions for SendCommand and ReceiveCommand? Are they the same?
  * These are really identical between server and client... we ought to
  * simplify and combine them into MailDataAction or something like that.
  *
@@ -18,6 +18,12 @@ namespace Tap\Smtp\Role\Server\Action;
  * and servers should verify incoming messages. This can be alleviated by
  * instructing the middleware what to do manually or splitting it into two
  * middlewares that perform each separate agent role.
+ *
+ * Another example might be PIPELINING support, which perhaps needs to know
+ * the difference between SendCommand and ReceiveCommand to work universally
+ * on servers and clients alike.
+ *
+ * So maybe having the actions split out is actually meaningfully good.
  */
 class ReceiveMailData extends ServerAction
 {
