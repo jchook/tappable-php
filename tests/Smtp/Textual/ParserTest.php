@@ -2,9 +2,7 @@
 
 namespace Tap\Smtp\Test;
 
-use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
 use Tap\Smtp\Element\Command\Command;
 use Tap\Smtp\Element\Command\Data;
 use Tap\Smtp\Element\Command\Ehlo;
@@ -21,17 +19,14 @@ use Tap\Smtp\Element\Command\Unknown;
 use Tap\Smtp\Element\Command\Vrfy;
 use Tap\Smtp\Element\ForwardPath;
 use Tap\Smtp\Element\Mailbox;
-use Tap\Smtp\Element\Origin\Origin;
 use Tap\Smtp\Element\Origin\AddressLiteral;
 use Tap\Smtp\Element\Origin\Domain;
 use Tap\Smtp\Element\Param;
-use Tap\Smtp\Element\Path;
 use Tap\Smtp\Element\Reply\Code;
 use Tap\Smtp\Element\Reply\EhloKeywordBase;
 use Tap\Smtp\Element\Reply\EhloParamBase;
 use Tap\Smtp\Element\Reply\EhloReply;
 use Tap\Smtp\Element\Reply\GenericReply;
-use Tap\Smtp\Element\Reply\Greeting;
 use Tap\Smtp\Element\Reply\Reply;
 use Tap\Smtp\Element\ReversePath;
 use Tap\Smtp\Textual\Exception\IncompleteReply;

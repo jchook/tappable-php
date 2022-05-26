@@ -5,6 +5,7 @@ namespace Tap\Smtp\Role\Client\Middleware;
 use Tap\ReflectiveTap;
 use Tap\Smtp\Element\Command\Data;
 use Tap\Smtp\Element\Command\Ehlo;
+use Tap\Smtp\Element\Command\Helo;
 use Tap\Smtp\Element\Command\MailFrom;
 use Tap\Smtp\Element\Command\RcptTo;
 use Tap\Smtp\Element\Origin\Origin;
@@ -17,11 +18,17 @@ use Tap\Smtp\Role\Client\Action\SendMail;
 use Tap\Smtp\Role\Client\Exception\ClientSpokeTooEarly;
 use Tap\Smtp\Role\Client\Exception\MissingHello;
 use Tap\Smtp\Role\Client\Exception\MissingSession;
+use Tap\Smtp\Role\Client\Exception\TemporarilyUnavailable;
 use Tap\Smtp\Session\Session;
 
 class ClientBehavior extends ReflectiveTap
 {
   public const DEFAULT_TRANSACTION_ID = 'default';
+
+  /**
+   * Keeps track of the current mail being sent
+   */
+  protected ?SendMail $sendMail = null;
 
   public function __construct(
     public Origin $origin,
@@ -51,6 +58,8 @@ class ClientBehavior extends ReflectiveTap
   {
     $this->next($action);
     $reply = $action->reply;
+    $code = $reply->getCode();
+    $command = $action->command;
 
     // Receive the reply into the session state
     $this->session->receiveReply($reply);
@@ -62,14 +71,28 @@ class ClientBehavior extends ReflectiveTap
       ));
     }
 
-    // Are we in the process of sending mail in an automated fashion?
-    // Was the reply successful?
-    // Okay, then update state and send the next command!
-    if ($this->session->sendMail && $reply->getCode()->isPositive()) {
+    // Negative EHLO reply?
+    elseif ($command instanceof Ehlo && $code->isNegative()) {
+      if ($code->isPermanant()) {
+        $this->dispatch(new SendCommand(
+          new Helo($this->origin)
+        ));
+      } else {
+        // TODO: this should be like... ServerReplyException or something
+        // and include the actual reply on the Exception object
+        throw new TemporarilyUnavailable(
+          'Mail server is temporarily unavailable: ' . $reply->getCode()->value
+        );
+      }
+    }
+
+    // Continue sending mail?
+    $sendMail = $this->sendMail;
+    if ($sendMail && $reply->getCode()->isPositive()) {
       if ($action->command instanceof MailFrom) {
-        foreach ($this->session->rcptTos as $rcptTo) {
+        foreach ($sendMail->forwardPaths as $forwardPath) {
           $this->dispatch(new SendCommand(
-            new RcptTo($rcptTo)
+            new RcptTo($forwardPath),
           ));
         }
       } elseif ($action->command instanceof RcptTo) {
@@ -84,7 +107,7 @@ class ClientBehavior extends ReflectiveTap
 
   protected function sendCommand(SendCommand $action): void
   {
-    //
+    // Maybe let the server complain about this rather than limiting the client.
     if (!$this->session->greeting) {
       throw new ClientSpokeTooEarly(
         'Protocol error: client attempted to send a ' .
@@ -104,7 +127,7 @@ class ClientBehavior extends ReflectiveTap
       throw new MissingHello('Clients must say hello before sending mail');
     }
     $this->next($action);
-    $this->session->prepareToSendMail($action);
+    $this->sendMail = $action;
     $this->dispatch(new SendCommand(new MailFrom($action->reversePath)));
   }
 }

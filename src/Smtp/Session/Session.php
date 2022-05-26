@@ -14,7 +14,6 @@ use Tap\Smtp\Element\Command\Rset;
 use Tap\Smtp\Element\Reply\Greeting;
 use Tap\Smtp\Element\Reply\Reply;
 use Tap\Smtp\Role\Client\Action\SendMail;
-use Tap\Smtp\Support\CommandReplyPair;
 
 /**
  *
@@ -53,17 +52,11 @@ class Session
 	 */
 	protected array $commandQueue = [];
 
-	/**
-	 * @var CommandReplyPair[]
-	 */
-	protected array $transcript = [];
-
 	public function __construct(
 		public string $id,
 		public ?Greeting $greeting = null,
 		public ?Helo $helo = null,
 		public ?Ehlo $ehlo = null,
-		public ?EhloReply $ehloReply = null,
 		public ?SendMail $sendMail = null,
 		public ?MailFrom $mailFrom = null,
 		/**
@@ -101,16 +94,6 @@ class Session
 		return $this->helo || $this->ehlo;
 	}
 
-	public function getTranscript(): array
-	{
-		return $this->transcript;
-	}
-
-	public function prepareToSendMail(SendMail $sendMail): void
-	{
-		$this->sendMail = $sendMail;
-	}
-
 	public function receiveCommand(Command $command): void
 	{
 		$this->commandQueue[] = $command;
@@ -119,7 +102,6 @@ class Session
 	public function receiveGreeting(Greeting $greeting): void
 	{
 		$this->greeting = $greeting;
-		$this->transcript[] = new CommandReplyPair(null, $greeting);
 	}
 
 	public function receiveReply(Reply $reply): void
@@ -136,8 +118,6 @@ class Session
 		else {
 			$cmd = array_shift($this->commandQueue);
 		}
-
-		$this->transcript[] = new CommandReplyPair($cmd, $reply);
 
 		if ($reply->code->isPositive()) {
 			if ($cmd instanceof Rset) {
@@ -191,11 +171,6 @@ class Session
 				$this->quit = $cmd;
 			}
 		}
-	}
-
-	public function receiveStrayReply(Reply $reply): void
-	{
-		$this->transcript[] = new CommandReplyPair(null, $reply);
 	}
 }
 

@@ -146,14 +146,19 @@ class Code
 		return $this->getSeverity() === '5';
 	}
 
-	public static function ok(): static
+	public static function ok(): self
 	{
-		return new static('250');
+		return new self('250');
 	}
 
-	public static function ehloOk(): static
+	public static function ehloOk(): self
 	{
-		return new static('220');
+		return new self('220');
+	}
+
+	public static function dataOk(): self
+	{
+		return new self('354');
 	}
 }
 
