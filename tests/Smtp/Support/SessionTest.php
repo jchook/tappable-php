@@ -48,8 +48,8 @@ class SessionTest extends TestCase
 		$origin = new Domain('norm.macdonald.name');
 		$ehlo = new Ehlo($origin);
 		$helo = new Helo($origin);
-		$replyOk = new GenericReply(Code::ehloOk(), ['Ok']);
-		$replyEhloOk = new EhloReply(Code::ehloOk(), $origin, 'Howdy cowboy', []);
+		$replyOk = new GenericReply(Code::ok(), ['Ok']);
+		$replyEhloOk = new EhloReply(Code::ok(), $origin, 'Howdy cowboy', []);
 		$replyEhloFail = new GenericReply(new Code('500'), ['Command not recognized']);
 
 		$session = new Session('Empty');
@@ -77,8 +77,8 @@ class SessionTest extends TestCase
 		$origin = new Domain('norm.macdonald.name');
 		$ehlo = new Ehlo($origin);
 		$helo = new Helo($origin);
-		$replyOk = new GenericReply(Code::ehloOk(), ['Ok']);
-		$replyEhloOk = new EhloReply(Code::ehloOk(), $origin, 'Howdy cowboy', []);
+		$replyOk = new GenericReply(Code::ok(), ['Ok']);
+		$replyEhloOk = new EhloReply(Code::ok(), $origin, 'Howdy cowboy', []);
 		$replyEhloFail = new GenericReply(new Code('500'), ['Command not recognized']);
 
 		$session = new Session('Empty');
@@ -122,7 +122,7 @@ class SessionTest extends TestCase
 			$session->ehlo,
 			'Session state should not accept EHLO until a successful reply'
 		);
-		$replyEhloOk = new EhloReply(Code::ehloOk(), $origin, 'Howdy cowboy', []);
+		$replyEhloOk = new EhloReply(Code::ok(), $origin, 'Howdy cowboy', []);
 		$session->receiveReply($replyEhloOk);
 		$this->assertEquals(
 			$ehlo,

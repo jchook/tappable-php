@@ -80,11 +80,11 @@ class ParserTest extends TestCase
       ]),
     ];
     $greet = "Ello cap'n!";
-    $reply = new EhloReply(Code::ehloOk(), $origin, $greet, $keywords);
+    $reply = new EhloReply(Code::ok(), $origin, $greet, $keywords);
     $replyStr = implode("\r\n", [
-      "220-$domain $greet",
-      "220-KEYWORD SIZE=9001 ID",
-      "220 DUCK FLY=YES ID",
+      "250-$domain $greet",
+      "250-KEYWORD SIZE=9001 ID",
+      "250 DUCK FLY=YES ID",
       "",
     ]);
     $this->assertEquals(
@@ -181,9 +181,6 @@ class ParserTest extends TestCase
   public function testParseReplies()
   {
     $repliesStr = implode("\r\n", [
-      '220-ducks.gov Howdy cowboy',
-      '220-KEYWORD DUCKS ARE COOL',
-      '220 AMIRITE',
       '250-Ok',
       '250 No really, it\'s okay',
       '250 Ok',
@@ -191,14 +188,6 @@ class ParserTest extends TestCase
     ]);
     $parser = new Parser();
     $replies = [
-      new EhloReply(Code::ehloOk(), new Domain('ducks.gov'), 'Howdy cowboy', [
-        new EhloKeywordBase('KEYWORD', [
-          new EhloParamBase('DUCKS'),
-          new EhloParamBase('ARE'),
-          new EhloParamBase('COOL'),
-        ]),
-        new EhloKeywordBase('AMIRITE'),
-      ]),
       new GenericReply(Code::ok(), ['Ok', 'No really, it\'s okay']),
       new GenericReply(Code::ok(), ['Ok']),
     ];
@@ -301,18 +290,24 @@ class ParserTest extends TestCase
   {
     $renderer = new Renderer(smtputf8: true);
     $parser = new Parser(smtputf8: true);
-    $parsed = $parser->parseReply(
-      $renderer->renderReply($reply)
-    );
+    $str = $renderer->renderReply($reply);
+    if ($reply instanceof Greeting) {
+      $parsed = $parser->parseGreeting($str);
+    } elseif ($reply instanceof EhloReply) {
+      $parsed = $parser->parseEhloReply($str);
+    } else {
+      $parsed = $parser->parseReply($str);
+    }
     $this->assertEquals($reply, $parsed);
   }
 
   public function getParserReplies(): array
   {
     return [
+      [new Greeting(new Domain('zombo.com'), ['Welcome to zombocom', 'ZOMBO'])],
       [new GenericReply(Code::ok(), ['Ello m8', 'Do you have any bread?'])],
       [
-        new EhloReply(Code::ehloOk(), new Domain('ducks.gov'), 'Ello m8', [
+        new EhloReply(Code::ok(), new Domain('ducks.gov'), 'Ello m8', [
           new EhloKeywordBase('CHEF', [
             new EhloParamBase('BOYARDEE'),
             new EhloParamBase('🦆'),

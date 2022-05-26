@@ -151,11 +151,6 @@ class Code
 		return new self('250');
 	}
 
-	public static function ehloOk(): self
-	{
-		return new self('220');
-	}
-
 	public static function dataOk(): self
 	{
 		return new self('354');

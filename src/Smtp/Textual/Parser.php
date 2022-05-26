@@ -341,11 +341,6 @@ class Parser
 		$last = $replyLines[count($replyLines) - 1];
 		$code = $last->code;
 
-		// Ehlo
-		if ($code->value === '220') {
-			return $this->parseEhloReplyFromLines($replyLines);
-		}
-
 		// Generic
 		$messages = array_map(fn(ReplyLine $x) => $x->message, $replyLines);
 		return new GenericReply($code, $messages);

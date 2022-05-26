@@ -313,13 +313,13 @@ class RendererTest extends TestCase
       ]),
     ];
     $greet = "Ello cap'n!";
-    $reply = new EhloReply(Code::ehloOk(), $origin, $greet, $keywords);
+    $reply = new EhloReply(Code::ok(), $origin, $greet, $keywords);
     $renderer = new Renderer();
     $this->assertSame(
       implode("\r\n", [
-        "220-$domain $greet",
-        "220-KEYWORD SIZE=9001 ID",
-        "220 DUCK FLY=YES ID",
+        "250-$domain $greet",
+        "250-KEYWORD SIZE=9001 ID",
+        "250 DUCK FLY=YES ID",
         "",
       ]),
       $renderer->renderReply($reply),
