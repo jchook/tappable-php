@@ -14,24 +14,22 @@ use Tap\Smtp\Element\Command\RcptTo;
 use Tap\Smtp\Element\Command\Rset;
 use Tap\Smtp\Element\Command\Vrfy;
 use Tap\Smtp\Element\Origin\Domain;
-use Tap\Smtp\Element\Reply\Code;
-use Tap\Smtp\Element\Reply\EhloKeywordBase;
-use Tap\Smtp\Element\Reply\EhloReply;
 use Tap\Smtp\Element\Reply\Greeting;
 use Tap\Smtp\Element\Reply\ReplyFactory;
-use Tap\Smtp\Role\Server\Action\NewSession;
+use Tap\Smtp\Role\Agent\Action\NewSession;
 use Tap\Smtp\Role\Server\Action\ReceiveCommand;
 use Tap\Smtp\Role\Server\Action\SendCommandReply;
 use Tap\Smtp\Role\Server\Action\SendGreeting;
 use Tap\Smtp\Session\Session;
+use Tap\TapBase;
 
 class ServerBehavior extends ReflectiveTap
 {
-  public const DEFAULT_TRANSACTION_ID = 'default';
+  public const DEFAULT_SESSION_ID = 'default';
 
   public function __construct(
     public Domain $domain,
-    public Session $session = new Session(self::DEFAULT_TRANSACTION_ID),
+    public Session $session = new Session(self::DEFAULT_SESSION_ID),
   )
   {
   }
@@ -42,7 +40,7 @@ class ServerBehavior extends ReflectiveTap
     $this->session = $action->session;
     $this->dispatch(
       new SendGreeting(
-        new Greeting($this->origin),
+        new Greeting($this->domain),
         ['Tappable SMTP Server'],
       )
     );
@@ -72,13 +70,11 @@ class ServerBehavior extends ReflectiveTap
     $this->session->receiveCommand($command);
 
     if ($command instanceof Ehlo) {
-      $reply = new EhloReply(Code::ok(), $this->domain, 'Hi :)', [
-        new EhloKeywordBase('SMTPUTF8'),
-      ]);
+      $reply = ReplyFactory::ehloOk($this->domain);
+    } elseif ($command instanceof Helo) {
+      $reply = ReplyFactory::heloOk($this->domain);
     } elseif ($command instanceof RcptTo || $command instanceof Vrfy) {
       $reply = ReplyFactory::mailboxUnavailable();
-    } elseif ($command instanceof Helo) {
-      $reply = ReplyFactory::heloOk($this->domain->domain);
     } elseif ($command instanceof Data) {
       $reply = ReplyFactory::startMailInput();
     } elseif ($command instanceof EndOfData) {

@@ -2,6 +2,8 @@
 
 namespace Tap\Smtp\Element\Reply;
 
+use Tap\Smtp\Element\Origin\Domain;
+
 class ReplyFactory
 {
 	public static function ok(array $messages = ['Ok']): Reply
@@ -9,9 +11,16 @@ class ReplyFactory
 		return new GenericReply(Code::ok(), $messages);
 	}
 
-	public static function heloOk(string $domain)
+	public static function ehloOk(Domain $domain): EhloReply
 	{
-		return self::ok([idn_to_ascii($domain)]);
+		return new EhloReply(Code::ok(), $domain, 'Hi :)', [
+			new EhloKeywordBase('SMTPUTF8'),
+		]);
+	}
+
+	public static function heloOk(Domain $domain)
+	{
+		return self::ok([idn_to_ascii($domain->domain)]);
 	}
 
 	public static function syntaxError(array $messages = ['Syntax error']): Reply

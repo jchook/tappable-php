@@ -11,7 +11,7 @@ use Tap\Smtp\Element\Command\MailFrom;
 use Tap\Smtp\Element\Command\RcptTo;
 use Tap\Smtp\Element\Origin\Origin;
 use Tap\Smtp\Element\Reply\Greeting;
-use Tap\Smtp\Role\Client\Action\NewSession;
+use Tap\Smtp\Role\Agent\Action\NewSession;
 use Tap\Smtp\Role\Client\Action\ReceiveCommandReply;
 use Tap\Smtp\Role\Client\Action\ReceiveGreeting;
 use Tap\Smtp\Role\Client\Action\ReceiveReply;
@@ -23,7 +23,7 @@ use Tap\Smtp\Session\Session;
 
 class ClientBehavior extends ReflectiveTap
 {
-  public const DEFAULT_TRANSACTION_ID = 'default';
+  public const DEFAULT_SESSION_ID = 'default';
 
   /**
    * Keeps track of the current mail being sent
@@ -32,7 +32,7 @@ class ClientBehavior extends ReflectiveTap
 
   public function __construct(
     public Origin $origin,
-    public Session $session = new Session(self::DEFAULT_TRANSACTION_ID),
+    public Session $session = new Session(self::DEFAULT_SESSION_ID),
   )
   {
   }
