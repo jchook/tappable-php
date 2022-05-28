@@ -50,11 +50,30 @@ Recent benchmarks show that class instances have better performance than
 associative arrays, especially when in a (large) array.
 
 
-Binary data
------------
+Line-based parser
+-----------------
 
-This is a line-based parser so far. Let it be known! Support binary data with
-Taps.
+This is a line-based parser so far. Let it be known! It would be neat to
+upgrade it to an LALR or LL(1) parser or some such but that has proven to be
+very slow/cumbersome in PHP.
+
+
+Mail Data
+---------
+
+I feel tempted to emit mail data in buffer chunks, allowing the core stack
+to completely avoid mucking with streams. Delivery middleware can push the
+data chunks onto a temp stream and then emit a final "ReceivedMailData" action
+with the stream attached to it for various other middleware to consume and
+manipulate as a whole.
+
+The question is... should all mail be "spooled" first and then "delivered"
+afterwards? I suppose that's the cleanest way, especially since we are told
+by RFC 5321 to respond to <CRLF>.<CRLF> as quickly as possible and not to
+delay it by handling the mail first.
+
+So perhaps the stream-based middleware spools the entire data stream into a
+spool stream and then attaches that to the ReceivedMailData action.
 
 
 Pipelining

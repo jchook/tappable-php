@@ -24,9 +24,21 @@ use Tap\Smtp\Element\Command\RcptTo;
  *
  * Another example might be PIPELINING support, which perhaps needs to know
  * the difference between SendCommand and ReceiveCommand to work universally
- * on servers and clients alike.
+ * on servers and clients alike. Hmmm.... or does it?
  *
  * So maybe having the actions split out is actually meaningfully good.
+ *
+ * Or maybe it's bad -- now to handle a command generically, I need to check
+ * for SendCommand and ReceiveCommand.
+ *
+ * One tell is that there's no really good name for a CommandAction except that.
+ * Command confuses actions with Elements.
+ *
+ * Okay, how about both? You have a CommandAction that is extended by both
+ * ReceiveCommand and SendCommand. That way you can handle them discretely or
+ * independently.
+ *
+ * This brings up important questions about ReflectiveTap and inheritance.
  */
 class ReceiveMail extends ServerAction
 {

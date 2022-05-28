@@ -12,6 +12,7 @@ use Tap\Smtp\Element\Command\Noop;
 use Tap\Smtp\Element\Command\Quit;
 use Tap\Smtp\Element\Command\RcptTo;
 use Tap\Smtp\Element\Command\Rset;
+use Tap\Smtp\Element\Command\Unknown;
 use Tap\Smtp\Element\Command\Vrfy;
 use Tap\Smtp\Element\Origin\Domain;
 use Tap\Smtp\Element\Reply\Greeting;
@@ -21,7 +22,6 @@ use Tap\Smtp\Role\Server\Action\ReceiveCommand;
 use Tap\Smtp\Role\Server\Action\SendCommandReply;
 use Tap\Smtp\Role\Server\Action\SendGreeting;
 use Tap\Smtp\Session\Session;
-use Tap\TapBase;
 
 class ServerBehavior extends ReflectiveTap
 {
@@ -87,8 +87,10 @@ class ServerBehavior extends ReflectiveTap
       $reply = ReplyFactory::ok();
     } elseif ($command instanceof Quit) {
       $reply = ReplyFactory::serviceClosingChannel();
-    } else {
+    } elseif ($command instanceof Unknown) {
       $reply = ReplyFactory::commandUnrecognized();
+    } else {
+      $reply = ReplyFactory::commandNotImplemented();
     }
 
     $this->dispatch(
