@@ -1,14 +1,18 @@
 <?php declare(strict_types=1);
 
-namespace Tap\Smtp\Role\Client\Action;
+namespace Tap\Smtp\Role\Agent\Action;
 
+use Tap\Smtp\Element\Command\RcptTo;
 use Tap\Smtp\Element\ReversePath;
-use Tap\Smtp\Role\Agent\Action\MailAction;
+use Tap\Smtp\Role\Agent\Action\AgentAction;
 
-class SendMail extends MailAction
+class MailAction extends AgentAction
 {
   public function __construct(
     public ReversePath $reversePath,
+    /**
+     * @var RcptTo[]
+     */
     public array $forwardPaths,
     /**
      * @var resource

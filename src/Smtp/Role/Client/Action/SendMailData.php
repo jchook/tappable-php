@@ -2,15 +2,9 @@
 
 namespace Tap\Smtp\Role\Client\Action;
 
-class SendMailData extends ClientAction
+use Tap\Smtp\Role\Agent\Action\MailDataAction;
+
+class SendMailData extends MailDataAction
 {
-  public function __construct(
-    /**
-     * @var resource
-     */
-    public $dataStream,
-  )
-  {
-  }
 }
 

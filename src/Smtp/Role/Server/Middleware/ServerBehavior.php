@@ -19,6 +19,8 @@ use Tap\Smtp\Element\Reply\Greeting;
 use Tap\Smtp\Element\Reply\ReplyFactory;
 use Tap\Smtp\Role\Agent\Action\NewSession;
 use Tap\Smtp\Role\Server\Action\ReceiveCommand;
+use Tap\Smtp\Role\Server\Action\ReceiveMail;
+use Tap\Smtp\Role\Server\Action\ReceiveMailData;
 use Tap\Smtp\Role\Server\Action\SendCommandReply;
 use Tap\Smtp\Role\Server\Action\SendGreeting;
 use Tap\Smtp\Session\Session;
@@ -30,6 +32,7 @@ class ServerBehavior extends ReflectiveTap
   public function __construct(
     public Domain $domain,
     public Session $session = new Session(self::DEFAULT_SESSION_ID),
+    public $dataStream = null,
   )
   {
   }
@@ -108,6 +111,18 @@ class ServerBehavior extends ReflectiveTap
   {
     $this->next($action);
     $this->session->receiveReply($action->reply);
+
+    $command = $action->command;
+    $reply = $action->reply;
+
+    if ($reply->getCode()->isCompletion()) {
+      if ($command instanceof EndOfData) {
+        $this->dispatch(new ReceiveMail(
+          $this->session->mailFrom,
+          $this->session->rcptTos,
+        ));
+      }
+    }
   }
 }
 

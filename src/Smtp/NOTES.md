@@ -75,6 +75,32 @@ delay it by handling the mail first.
 So perhaps the stream-based middleware spools the entire data stream into a
 spool stream and then attaches that to the ReceivedMailData action.
 
+Also the EndOfData command has always been a bit smelly. It's kind of a command
+because it receives a reply, but also it doesn't have a proper verb except ".".
+It would be nice to handle end of data in the same switch where your other
+state changes / commands live.
+
+It seems we have built an SMTP server that does everything except handle mail.
+
+The Renderer and Parser should dot-stuff and de-dot-stuff, except we do not
+want to be rendering mail data to a string. We could return a generator that
+produces chunks from the stream, or use a stream filter, or render to a stream.
+
+Render to a stream seems correct. Perhaps user-supplied.
+
+Seeing now:
+
+Emitting data in chunks does not actually allow the core stack to ignore
+streams of data, because they can never represent the complete data as a
+string.
+
+Receiving mail data is a core function of the SMTP server behavior itself.
+However, I feel it should receive the data as a reliable, spooled stream.
+Spooling the stream is a concern external to the core SMTP behavior. It needs
+to be handled by optional spooling, e.g. a /dev/null spooling agent, mbox,
+maildir, sql, etc.
+
+
 
 Pipelining
 ----------

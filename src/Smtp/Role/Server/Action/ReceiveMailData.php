@@ -2,6 +2,8 @@
 
 namespace Tap\Smtp\Role\Server\Action;
 
+use Tap\Smtp\Role\Agent\Action\MailDataAction;
+
 /**
  * TODO: Separate actions for SendCommand and ReceiveCommand? Are they the same?
  * These are really identical between server and client... we ought to
@@ -25,15 +27,7 @@ namespace Tap\Smtp\Role\Server\Action;
  *
  * So maybe having the actions split out is actually meaningfully good.
  */
-class ReceiveMailData extends ServerAction
+class ReceiveMailData extends MailDataAction
 {
-  public function __construct(
-    /**
-     * @var resource
-     */
-    public $dataStream,
-  )
-  {
-  }
 }
 

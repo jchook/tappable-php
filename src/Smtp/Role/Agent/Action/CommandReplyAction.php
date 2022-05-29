@@ -1,16 +1,15 @@
 <?php declare(strict_types=1);
 
-namespace Tap\Smtp\Role\Client\Action;
+namespace Tap\Smtp\Role\Agent\Action;
 
 use Tap\Smtp\Element\Command\Command;
 use Tap\Smtp\Element\Reply\Reply;
-use Tap\Smtp\Role\Agent\Action\CommandReplyAction;
 
-class ReceiveCommandReply extends CommandReplyAction
+class CommandReplyAction extends AgentAction
 {
   public function __construct(
     public Command $command,
-    public Reply $reply
+    public Reply $reply,
   )
   {
   }

@@ -2,9 +2,9 @@
 
 namespace Tap\Smtp\Role\Agent\Action;
 
-use Tap\ActionBase;
+use Tap\Action;
 
-abstract class AgentAction extends ActionBase
+class AgentAction implements Action
 {
 }
 

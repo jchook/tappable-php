@@ -2,10 +2,10 @@
 
 namespace Tap\Smtp\Role\Client\Action;
 
-use Tap\ActionBase;
 use Tap\Smtp\Element\Command\Command;
+use Tap\Smtp\Role\Agent\Action\CommandAction;
 
-class SendCommand extends ClientAction
+class SendCommand extends CommandAction
 {
   public function __construct(
     public Command $command

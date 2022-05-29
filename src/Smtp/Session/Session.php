@@ -65,6 +65,10 @@ class Session
 		 */
 		public array $rcptTos = [],
 		public ?Data $data = null,
+		/**
+		 * @var resource
+		 */
+		public $dataStream = null,
 		public ?EndOfData $endOfData = null,
 		public ?Quit $quit = null,
 	)
@@ -107,6 +111,11 @@ class Session
 	public function receiveGreeting(Greeting $greeting): void
 	{
 		$this->greeting = $greeting;
+	}
+
+	public function receiveDataStream($dataStream): void
+	{
+		$this->dataStream = $dataStream;
 	}
 
 	/**

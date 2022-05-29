@@ -2,8 +2,7 @@
 
 namespace Tap\Smtp\Role\Server\Action;
 
-use Tap\Smtp\Element\Command\MailFrom;
-use Tap\Smtp\Element\Command\RcptTo;
+use Tap\Smtp\Role\Agent\Action\MailAction;
 
 /**
  * TODO: Separate actions for SendCommand and ReceiveCommand? Are they the same?
@@ -40,20 +39,7 @@ use Tap\Smtp\Element\Command\RcptTo;
  *
  * This brings up important questions about ReflectiveTap and inheritance.
  */
-class ReceiveMail extends ServerAction
+class ReceiveMail extends MailAction
 {
-  public function __construct(
-    public ?MailFrom $mailFrom = null,
-    /**
-     * @var RcptTo[]
-     */
-    public array $rcptTos = [],
-    /**
-     * @var resource
-     */
-    public $dataStream = null,
-  )
-  {
-  }
 }
 

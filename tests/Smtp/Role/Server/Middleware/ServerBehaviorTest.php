@@ -39,19 +39,19 @@ class ServerBehaviorTest extends TestCase
 			new NewSession($session),
 		);
 		$helo = new Helo($domain);
-		$mailFrom = new MailFrom(new ReversePath(new Mailbox('a', $domain)));
-		$rcptTos = [new RcptTo(new ForwardPath(new Mailbox('b', $domain)))];
+		$from = new ReversePath(new Mailbox('a', $domain));
+		$tos = [new ForwardPath(new Mailbox('b', $domain))];
 		$dataStream = 'test';
 
 		// HELO
 		$agent->dispatch(new ReceiveCommand($helo));
 
 		// MAIL FROM
-		$agent->dispatch(new ReceiveCommand($mailFrom));
+		$agent->dispatch(new ReceiveCommand(new MailFrom($from)));
 
 		// RCPT TO
-		foreach ($rcptTos as $rcptTo) {
-			$agent->dispatch(new ReceiveCommand($rcptTo));
+		foreach ($tos as $to) {
+			$agent->dispatch(new ReceiveCommand(new RcptTo($to)));
 		}
 
 		// DATA
@@ -66,7 +66,7 @@ class ServerBehaviorTest extends TestCase
 
 		$this->assertCount(1, $mailbox->mailbox);
 		$this->assertEquals(
-			new ReceiveMail($mailFrom, $rcptTos, $dataStream),
+			new ReceiveMail($from, $tos, $dataStream),
 			$mailbox->mailbox[0]
 		);
 	}
@@ -78,35 +78,22 @@ class InMemoryMailbox extends ReflectiveTap
 	 * @var ReceiveMail[]
 	 */
 	public array $mailbox = [];
-	public ?ReceiveMail $receiveMail = null;
+	public ?Session $session = null;
+	public $dataStream = null;
+	public function newSession(NewSession $action): void
+	{
+		$this->session = $action->session;
+	}
+
 	public function receiveMailData(ReceiveMailData $action): void
 	{
-		$this->receiveMail->dataStream = $action->dataStream;
+		$this->dataStream = $action->dataStream;
 		$this->next($action);
 	}
+
   public function sendCommandReply(SendCommandReply $action): void
   {
     $command = $action->command;
-		if ($command instanceof MailFrom) {
-			$this->receiveMail = new ReceiveMail();
-			$this->receiveMail->mailFrom = $command;
-		}
-    elseif ($command instanceof RcptTo) {
-      $action->reply = ReplyFactory::ok();
-			$this->receiveMail->rcptTos[] = $command;
-    }
-		elseif ($command instanceof EndOfData) {
-			$this->mailbox[] = $this->receiveMail;
-			$this->receiveMail = null;
-		}
-		elseif (
-			$command instanceof Ehlo ||
-			$command instanceof Helo ||
-			$command instanceof Rset ||
-			$command instanceof Quit
-		) {
-			$this->receiveMail = null;
-		}
     $this->next($action);
   }
 }
