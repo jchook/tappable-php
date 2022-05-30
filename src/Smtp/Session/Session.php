@@ -4,13 +4,14 @@ namespace Tap\Smtp\Session;
 
 use Tap\Smtp\Element\Command\Command;
 use Tap\Smtp\Element\Command\Data;
+use Tap\Smtp\Element\Command\DataStream;
 use Tap\Smtp\Element\Command\Ehlo;
-use Tap\Smtp\Element\Command\EndOfData;
 use Tap\Smtp\Element\Command\Helo;
 use Tap\Smtp\Element\Command\MailFrom;
 use Tap\Smtp\Element\Command\Quit;
 use Tap\Smtp\Element\Command\RcptTo;
 use Tap\Smtp\Element\Command\Rset;
+use Tap\Smtp\Element\ForwardPath;
 use Tap\Smtp\Element\Reply\Greeting;
 use Tap\Smtp\Element\Reply\Reply;
 use Tap\Smtp\Role\Client\Action\SendMail;
@@ -65,11 +66,7 @@ class Session
 		 */
 		public array $rcptTos = [],
 		public ?Data $data = null,
-		/**
-		 * @var resource
-		 */
-		public $dataStream = null,
-		public ?EndOfData $endOfData = null,
+		public ?DataStream $dataStream = null,
 		public ?Quit $quit = null,
 	)
 	{
@@ -85,6 +82,14 @@ class Session
 		return reset($this->commandQueue) ?: null;
 	}
 
+	/**
+	 * @return ForwardPath[]
+	 */
+	public function getForwardPaths(): array
+	{
+		return array_map(fn ($x) => $x->forwardPath, $this->rcptTos);
+	}
+
 	public function isEsmtp()
 	{
 		return (bool) $this->ehlo;
@@ -95,7 +100,7 @@ class Session
 		$this->mailFrom = null;
 		$this->rcptTos = [];
 		$this->data = null;
-		$this->endOfData = null;
+		$this->dataStream = null;
 	}
 
 	public function saidHello(): bool
@@ -111,11 +116,6 @@ class Session
 	public function receiveGreeting(Greeting $greeting): void
 	{
 		$this->greeting = $greeting;
-	}
-
-	public function receiveDataStream($dataStream): void
-	{
-		$this->dataStream = $dataStream;
 	}
 
 	/**
@@ -181,8 +181,8 @@ class Session
 			elseif ($cmd instanceof Data) {
 				$this->data = $cmd;
 			}
-			elseif ($cmd instanceof EndOfData) {
-				$this->endOfData = $cmd;
+			elseif ($cmd instanceof DataStream) {
+				$this->dataStream = $cmd;
 			}
 			elseif ($cmd instanceof Quit) {
 				$this->quit = $cmd;

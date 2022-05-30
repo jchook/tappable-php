@@ -5,13 +5,11 @@ namespace Tap\Smtp\Test\Role\Server;
 use PHPUnit\Framework\TestCase;
 use Tap\ReflectiveTap;
 use Tap\Smtp\Element\Command\Data;
-use Tap\Smtp\Element\Command\Ehlo;
-use Tap\Smtp\Element\Command\EndOfData;
+use Tap\Smtp\Element\Command\DataStream;
 use Tap\Smtp\Element\Command\Helo;
 use Tap\Smtp\Element\Command\MailFrom;
 use Tap\Smtp\Element\Command\Quit;
 use Tap\Smtp\Element\Command\RcptTo;
-use Tap\Smtp\Element\Command\Rset;
 use Tap\Smtp\Element\ForwardPath;
 use Tap\Smtp\Element\Mailbox;
 use Tap\Smtp\Element\Origin\Domain;
@@ -19,9 +17,9 @@ use Tap\Smtp\Element\Reply\ReplyFactory;
 use Tap\Smtp\Element\ReversePath;
 use Tap\Smtp\Role\Agent\Action\NewSession;
 use Tap\Smtp\Role\Agent\Agent;
+use Tap\Smtp\Role\Client\Action\ReceiveCommandReply;
 use Tap\Smtp\Role\Server\Action\ReceiveCommand;
 use Tap\Smtp\Role\Server\Action\ReceiveMail;
-use Tap\Smtp\Role\Server\Action\ReceiveMailData;
 use Tap\Smtp\Role\Server\Action\SendCommandReply;
 use Tap\Smtp\Role\Server\Middleware\ServerBehavior;
 use Tap\Smtp\Session\Session;
@@ -53,13 +51,13 @@ class ServerBehaviorTest extends TestCase
 		foreach ($tos as $to) {
 			$agent->dispatch(new ReceiveCommand(new RcptTo($to)));
 		}
+		$this->assertCount(1, $session->rcptTos);
 
 		// DATA
 		$agent->dispatch(new ReceiveCommand(new Data()));
-		$agent->dispatch(new ReceiveMailData($dataStream));
 
 		// .
-		$agent->dispatch(new ReceiveCommand(new EndOfData()));
+		$agent->dispatch(new ReceiveCommand(new DataStream('test')));
 
 		// QUIT
 		$agent->dispatch(new ReceiveCommand(new Quit()));
@@ -78,22 +76,19 @@ class InMemoryMailbox extends ReflectiveTap
 	 * @var ReceiveMail[]
 	 */
 	public array $mailbox = [];
-	public ?Session $session = null;
-	public $dataStream = null;
-	public function newSession(NewSession $action): void
+	public function receiveMail(ReceiveMail $action): void
 	{
-		$this->session = $action->session;
-	}
-
-	public function receiveMailData(ReceiveMailData $action): void
-	{
-		$this->dataStream = $action->dataStream;
+		$this->mailbox[] = $action;
 		$this->next($action);
 	}
 
-  public function sendCommandReply(SendCommandReply $action): void
-  {
-    $command = $action->command;
-    $this->next($action);
-  }
+	public function sendCommandReply(SendCommandReply $action): void
+	{
+		$command = $action->command;
+
+		if ($command instanceof RcptTo) {
+			$action->reply = ReplyFactory::ok();
+		}
+		$this->next($action);
+	}
 }

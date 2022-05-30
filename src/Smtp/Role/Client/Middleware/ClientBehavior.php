@@ -4,8 +4,8 @@ namespace Tap\Smtp\Role\Client\Middleware;
 
 use Tap\ReflectiveTap;
 use Tap\Smtp\Element\Command\Data;
+use Tap\Smtp\Element\Command\DataStream;
 use Tap\Smtp\Element\Command\Ehlo;
-use Tap\Smtp\Element\Command\EndOfData;
 use Tap\Smtp\Element\Command\Helo;
 use Tap\Smtp\Element\Command\MailFrom;
 use Tap\Smtp\Element\Command\RcptTo;
@@ -92,26 +92,18 @@ class ClientBehavior extends ReflectiveTap
         if (!$this->session->awaitingReply()) {
           $this->dispatch(
             new SendCommand(
-              new Data()
-            )
+              new Data(),
+            ),
           );
         }
       } elseif ($command instanceof Data) {
         $this->dispatch(
-          new SendMailData($sendMail->dataStream)
+          new SendCommand(
+            new DataStream($sendMail->dataStream),
+          ),
         );
       }
     }
-  }
-
-  protected function sendMailData(SendMailData $action): void
-  {
-    $this->next($action);
-    $this->dispatch(
-      new SendCommand(
-        new EndOfData()
-      )
-    );
   }
 
   protected function receiveGreeting(ReceiveGreeting $action): void

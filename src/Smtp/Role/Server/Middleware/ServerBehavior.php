@@ -4,8 +4,8 @@ namespace Tap\Smtp\Role\Server\Middleware;
 
 use Tap\ReflectiveTap;
 use Tap\Smtp\Element\Command\Data;
+use Tap\Smtp\Element\Command\DataStream;
 use Tap\Smtp\Element\Command\Ehlo;
-use Tap\Smtp\Element\Command\EndOfData;
 use Tap\Smtp\Element\Command\Helo;
 use Tap\Smtp\Element\Command\MailFrom;
 use Tap\Smtp\Element\Command\Noop;
@@ -20,7 +20,6 @@ use Tap\Smtp\Element\Reply\ReplyFactory;
 use Tap\Smtp\Role\Agent\Action\NewSession;
 use Tap\Smtp\Role\Server\Action\ReceiveCommand;
 use Tap\Smtp\Role\Server\Action\ReceiveMail;
-use Tap\Smtp\Role\Server\Action\ReceiveMailData;
 use Tap\Smtp\Role\Server\Action\SendCommandReply;
 use Tap\Smtp\Role\Server\Action\SendGreeting;
 use Tap\Smtp\Session\Session;
@@ -80,7 +79,7 @@ class ServerBehavior extends ReflectiveTap
       $reply = ReplyFactory::mailboxUnavailable();
     } elseif ($command instanceof Data) {
       $reply = ReplyFactory::startMailInput();
-    } elseif ($command instanceof EndOfData) {
+    } elseif ($command instanceof DataStream) {
       $reply = ReplyFactory::ok();
     } elseif (
       $command instanceof MailFrom ||
@@ -116,10 +115,11 @@ class ServerBehavior extends ReflectiveTap
     $reply = $action->reply;
 
     if ($reply->getCode()->isCompletion()) {
-      if ($command instanceof EndOfData) {
+      if ($command instanceof DataStream) {
         $this->dispatch(new ReceiveMail(
-          $this->session->mailFrom,
-          $this->session->rcptTos,
+          $this->session->mailFrom->reversePath,
+          $this->session->getForwardPaths(),
+          $this->session->dataStream->dataStream,
         ));
       }
     }

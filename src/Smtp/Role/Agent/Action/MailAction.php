@@ -2,8 +2,8 @@
 
 namespace Tap\Smtp\Role\Agent\Action;
 
-use Tap\Smtp\Element\Command\RcptTo;
 use Tap\Smtp\Element\ReversePath;
+use Tap\Smtp\Element\ForwardPath;
 use Tap\Smtp\Role\Agent\Action\AgentAction;
 
 class MailAction extends AgentAction
@@ -11,7 +11,7 @@ class MailAction extends AgentAction
   public function __construct(
     public ReversePath $reversePath,
     /**
-     * @var RcptTo[]
+     * @var ForwardPath[]
      */
     public array $forwardPaths,
     /**

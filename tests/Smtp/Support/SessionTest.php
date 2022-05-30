@@ -5,7 +5,7 @@ namespace Tap\Smtp\Test\Role\Client;
 use PHPUnit\Framework\TestCase;
 use Tap\Smtp\Element\Command\Data;
 use Tap\Smtp\Element\Command\Ehlo;
-use Tap\Smtp\Element\Command\EndOfData;
+use Tap\Smtp\Element\Command\DataStream;
 use Tap\Smtp\Element\Command\Helo;
 use Tap\Smtp\Element\Command\MailFrom;
 use Tap\Smtp\Element\Command\Quit;
@@ -162,10 +162,10 @@ class SessionTest extends TestCase
 		$this->assertSame($data, $session->data);
 
 		// .
-		$endOfData = new EndOfData();
-		$session->receiveCommand($endOfData);
+		$dataStream = new DataStream('testStream');
+		$session->receiveCommand($dataStream);
 		$session->receiveReply($replyOk);
-		$this->assertSame($endOfData, $session->endOfData);
+		$this->assertSame($dataStream, $session->dataStream);
 
 		// Quit
 		$quit = new Quit();

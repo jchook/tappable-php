@@ -5,7 +5,6 @@ namespace Tap\Smtp\Textual;
 use Tap\Smtp\Element\Command\Command;
 use Tap\Smtp\Element\Command\Data;
 use Tap\Smtp\Element\Command\Ehlo;
-use Tap\Smtp\Element\Command\EndOfData;
 use Tap\Smtp\Element\Command\Expn;
 use Tap\Smtp\Element\Command\Helo;
 use Tap\Smtp\Element\Command\Help;
@@ -72,7 +71,6 @@ class Parser
 		case 'DATA':
 		case 'RSET':
 		case 'QUIT':
-		case '.':
 			if (count($words) > 1) {
 				throw $this->syntaxError('Unexpected token after command verb ' . $verb);
 			}
@@ -103,7 +101,6 @@ class Parser
 		case 'DATA': return new Data();
 		case 'RSET': return new Rset();
 		case 'QUIT': return new Quit();
-		case '.': return new EndOfData();
 		}
 
 		// The rest of these commands accept a single string argument

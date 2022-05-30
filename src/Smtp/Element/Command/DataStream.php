@@ -46,13 +46,16 @@ namespace Tap\Smtp\Element\Command;
  *    as discussed in Section 4.4.
  *
  */
-class EndOfData extends CommandBase
+class DataStream extends CommandBase
 {
 	public string $verb = '.';
 	public function __construct(
+    /**
+     * @var resource
+     */
+    public $dataStream
 	)
 	{
 	}
 }
-
 

@@ -6,7 +6,6 @@ use PHPUnit\Framework\TestCase;
 use Tap\Smtp\Element\Command\Command;
 use Tap\Smtp\Element\Command\Data;
 use Tap\Smtp\Element\Command\Ehlo;
-use Tap\Smtp\Element\Command\EndOfData;
 use Tap\Smtp\Element\Command\Expn;
 use Tap\Smtp\Element\Command\Helo;
 use Tap\Smtp\Element\Command\Help;
@@ -263,7 +262,6 @@ class ParserTest extends TestCase
       [new Data()],
       [new Ehlo(new Domain('🐢.com'))],
       [new Ehlo(new AddressLiteral('127.0.0.1'))],
-      [new EndOfData()],
       [new Expn('🐢turtle@🐢turtle.com')],
       [new Helo(new Domain('🐢.com'))],
       [new Help()],

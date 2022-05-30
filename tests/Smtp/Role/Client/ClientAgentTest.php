@@ -88,9 +88,9 @@ class ClientAgentTest extends TestCase
 		$this->assertNotEmpty($client->getSession()->data);
 
 		// .
-		$this->assertEmpty($client->getSession()->endOfData);
+		$this->assertEmpty($client->getSession()->dataStream);
 		$client->dispatch($this->replyOk());
-		$this->assertNotEmpty($client->getSession()->endOfData);
+		$this->assertNotEmpty($client->getSession()->dataStream);
   }
 }
 
