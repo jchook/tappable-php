@@ -9,7 +9,7 @@ use Tap\Smtp\Role\Client\Action\SendCommand;
 use Tap\Smtp\Role\Client\Action\SendMail;
 use Tap\Smtp\Role\Client\Middleware\ClientBehavior;
 use Tap\Smtp\Session\Session;
-use Tap\Smtp\Support\System;
+use Tap\Smtp\Support\SystemDomain;
 
 class ClientAgent extends Agent
 {
@@ -25,7 +25,7 @@ class ClientAgent extends Agent
     // TODO: maybe grab ClientBehavior wherever it appears in the userTaps
     // and make one if it doesn't exist. This would allow folks to wrap it
     // in other middleware.
-    $this->origin = $origin ?? System::getHostDomain();
+    $this->origin = $origin ?? new SystemDomain();
     $this->smtp = $smtp ?? new ClientBehavior($this->origin);
     $this->tap(
       $this->smtp,

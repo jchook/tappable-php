@@ -23,13 +23,14 @@ use Tap\Smtp\Role\Server\Action\ReceiveMail;
 use Tap\Smtp\Role\Server\Action\SendCommandReply;
 use Tap\Smtp\Role\Server\Action\SendGreeting;
 use Tap\Smtp\Session\Session;
+use Tap\Smtp\Support\SystemDomain;
 
 class ServerBehavior extends ReflectiveTap
 {
   public const DEFAULT_SESSION_ID = 'default';
 
   public function __construct(
-    public Domain $domain,
+    public Domain $domain = new SystemDomain(),
     public Session $session = new Session(self::DEFAULT_SESSION_ID),
     public $dataStream = null,
   )

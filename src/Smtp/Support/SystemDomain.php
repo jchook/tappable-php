@@ -5,10 +5,10 @@ namespace Tap\Smtp\Support;
 use RuntimeException;
 use Tap\Smtp\Element\Origin\Domain;
 
-class System
+class SystemDomain extends Domain
 {
 	public static $gethostname = 'gethostname';
-	public static function getHostDomain(): Domain
+	public function __construct()
 	{
 		$gethostname = self::$gethostname;
 		$hostname = $gethostname();
@@ -17,6 +17,7 @@ class System
 			throw new RuntimeException('Unable to retrieve system hostname');
 		}
 
-		return new Domain($hostname);
+		$this->domain = $hostname;
 	}
 }
+
