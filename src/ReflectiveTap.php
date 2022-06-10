@@ -10,4 +10,3 @@ class ReflectiveTap
   use ReflectiveTapTrait;
 }
 
-

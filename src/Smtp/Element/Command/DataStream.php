@@ -45,6 +45,12 @@ namespace Tap\Smtp\Element\Command;
  *    that are diagnosed subsequently MUST be reported in a mail message,
  *    as discussed in Section 4.4.
  *
+ * Note, for this library DataStream is a Command because it receives a reply.
+ * However it is treated specially, similar to the Greeting.
+ *
+ * $dataStream must contain a stable, reliable dataStream of the parsed mail
+ * contents (e.g. removed dot-stuffing and trailing .<CRLF>), not some kind of
+ * raw network stream.
  */
 class DataStream extends CommandBase
 {
